@@ -5,7 +5,7 @@
 
 <br/>
 
-<img src="./demo.svg"/>
+![Crystal Castles - Not In Love](./demo.svg)
 
 </div>
 <br/>
@@ -19,7 +19,7 @@
 
 ## Installation
 
-#### Ubuntu / Debian
+<!-- #### Ubuntu / Debian
 
 ```sh
 sudo apt install sptlrx
@@ -28,12 +28,12 @@ sudo apt install sptlrx
 #### Arch (AUR)
 
 ```sh
-yay -S sptlrx
+yay -S sptlrx-bin
 ```
 
-### Other
+### Other -->
 
-Download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases) page.
+Download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page. Not in the repositories yet.
 
 ## Configuration
 
