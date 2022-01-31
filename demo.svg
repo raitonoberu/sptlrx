@@ -52,11 +52,8 @@
             }
         ]]></style>
         <style type="text/css" id="user-style">
-            /* The colors defined below are the default 16 colors used for rendering text of the terminal. Adjust
-               them as needed.
-               ubuntu colors based on https://en.wikipedia.org/wiki/ANSI_escape_code#Colors */
-            .foreground {fill: #e5e5e5;}
-            .background {fill: #010101;}
+            .foreground {fill: #ADBAC7;}
+            .background {fill: #22272E;}
             .color0 {fill: #010101;}
             .color1 {fill: #de382b;}
             .color2 {fill: #39b54a;}
