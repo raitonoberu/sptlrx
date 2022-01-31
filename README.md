@@ -3,12 +3,9 @@
 <h1><a href="https://github.com/raitonoberu/sptlrx">sptlrx</a></h1>
 <h4>Spotify lyrics in your terminal.</h4>
 
-<br/>
-
-![Crystal Castles - Not In Love](./demo.svg)
+![Crystal Castles - Not In Love](./demo.svg "Crystal Castles - Not In Love")
 
 </div>
-<br/>
 
 ## Features
 
@@ -40,13 +37,9 @@ Download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/re
 Since Spotify requires a special web token to display song lyrics, you need to specify your cookie when you first launch.
 
 1. Open your browser.
-
 2. Press F12, open the `Network` tab and go to [open.spotify.com](https://open.spotify.com/).
-
 3. Click on the first request to `open.spotify.com`.
-
 4. Scroll down to the `Request Headers`, right click the `cookie` field and select `Copy value`.
-
 5. Paste it when you are asked.
 
 Another way to set cookie is to set the `SPOTIFY_COOKIE` enviroment variable. You can always clear cookie by running `sptlrx --clear`.
