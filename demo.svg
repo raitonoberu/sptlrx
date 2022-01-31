@@ -53,7 +53,7 @@
         ]]></style>
         <style type="text/css" id="user-style">
             .foreground {fill: #ADBAC7;}
-            .background {fill: #22272E;}
+            .background {fill: #00000000;}
             .color0 {fill: #010101;}
             .color1 {fill: #de382b;}
             .color2 {fill: #39b54a;}
