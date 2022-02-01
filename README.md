@@ -16,21 +16,19 @@
 
 ## Installation
 
-<!-- #### Ubuntu / Debian
+**Linux**
 
-```sh
-sudo apt install sptlrx
-```
+    curl -sSL instl.sh/raitonoberu/sptlrx/linux | sudo bash  
 
-#### Arch (AUR)
+**Windows**
 
-```sh
-yay -S sptlrx-bin
-```
+    iwr instl.sh/raitonoberu/sptlrx/windows | iex  
+  
+**macOS**
 
-### Other -->
+    curl -sSL instl.sh/raitonoberu/sptlrx/macos | sudo bash   
 
-Download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page. Not in the repositories yet.
+You can also download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page.
 
 ## Configuration
 
