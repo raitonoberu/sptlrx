@@ -18,15 +18,24 @@
 
 **Linux**
 
-    curl -sSL instl.sh/raitonoberu/sptlrx/linux | sudo bash  
+- Arch Linux ([@BachoSeven](https://github.com/BachoSeven))
+```
+yay -S sptlrx-bin
+```
+- Other
+```
+curl -sSL instl.sh/raitonoberu/sptlrx/linux | sudo bash  
+````
 
 **Windows**
+````
+iwr instl.sh/raitonoberu/sptlrx/windows | iex  
+````
 
-    iwr instl.sh/raitonoberu/sptlrx/windows | iex  
-  
 **macOS**
-
-    curl -sSL instl.sh/raitonoberu/sptlrx/macos | sudo bash   
+````
+curl -sSL instl.sh/raitonoberu/sptlrx/macos | sudo bash   
+````
 
 You can also download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page.
 
