@@ -37,7 +37,7 @@ iwr instl.sh/raitonoberu/sptlrx/windows | iex
 curl -sSL instl.sh/raitonoberu/sptlrx/macos | sudo bash   
 ````
 
-You can also download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page.
+You can also download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page or [build it yourself](./building.md).
 
 ## Configuration
 
