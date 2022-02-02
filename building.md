@@ -9,19 +9,19 @@ git clone https://github.com/raitonoberu/sptlrx
 cd sptlrx
 ```
 
-#### Fetch dependencies
+### Fetch dependencies
 
 ```sh
 go get
 ```
 
-#### Build it
+### Build it
 
 ```sh
 go build -ldflags '-w -s'
 ```
 
-#### Run it
+### Run it
 
 ```sh
 ./sptlrx
