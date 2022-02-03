@@ -49,7 +49,7 @@ Since Spotify requires a special web token to display song lyrics, you need to s
 4. Scroll down to the `Request Headers`, right click the `cookie` field and select `Copy value`.
 5. Paste it when you are asked.
 
-Another way to set cookie is to set the `SPOTIFY_COOKIE` enviroment variable. You can always clear cookie by running `sptlrx --clear`.
+Another way to set cookie is to set the `SPOTIFY_COOKIE` enviroment variable. You can always clear cookie by running `sptlrx clear`.
 
 ## Information
 
