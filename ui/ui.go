@@ -1,4 +1,4 @@
-package main
+package ui
 
 import (
 	"os"
@@ -12,8 +12,6 @@ import (
 	"golang.org/x/term"
 )
 
-var client *spotify.SpotifyClient
-
 const (
 	// TimerIterval sets the interval for the internal timer (ms)
 	TimerInterval = 200
@@ -26,17 +24,25 @@ var (
 	boldStyle  = gloss.NewStyle().Bold(true)
 )
 
-type CurrentUpdateMsg *spotify.CurrentlyPlaying
-type PositionUpdateMsg bool
-type TimeUpdateMsg bool
-type LyricsUpdateMsg []*spotify.LyricsLine
+type currentUpdateMsg *spotify.CurrentlyPlaying
+type positionUpdateMsg bool
+type timeUpdateMsg bool
+type lyricsUpdateMsg []*spotify.LyricsLine
+
+func NewModel(client *spotify.SpotifyClient) tea.Model {
+	return &model{
+		client:     client,
+		hAlignment: gloss.Center,
+	}
+}
 
 type model struct {
 	w, h int
 
-	ID       string
-	Playing  bool
-	Position int
+	client   *spotify.SpotifyClient
+	id       string
+	playing  bool
+	position int
 
 	lastUpdate time.Time
 	audioDelay int
@@ -48,7 +54,7 @@ type model struct {
 }
 
 func (m *model) Init() tea.Cmd {
-	return tea.Batch(tickPosition(), updateCurrent(), tickTime())
+	return tea.Batch(tickPosition(), updateCurrent(m.client), tickTime())
 }
 
 func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
@@ -59,24 +65,24 @@ func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		// does not work on Windows!
 		m.w, m.h = msg.Width, msg.Height
 
-	case CurrentUpdateMsg:
-		if msg.ID != m.ID {
+	case currentUpdateMsg:
+		if msg.ID != m.id {
 			m.index = 0
 			m.lines = nil
-			cmd = updateLyrics(msg.ID)
+			cmd = updateLyrics(m.client, msg.ID)
 		}
 
-		m.ID = msg.ID
-		m.Playing = msg.Playing
-		m.Position = msg.Position
+		m.id = msg.ID
+		m.playing = msg.Playing
+		m.position = msg.Position
 		m.lastUpdate = time.Now()
 		m.updateIndex()
 
-	case PositionUpdateMsg:
+	case positionUpdateMsg:
 		cmd = tickPosition()
-		if m.Playing {
+		if m.playing {
 			now := time.Now()
-			m.Position += int(now.Sub(m.lastUpdate).Milliseconds())
+			m.position += int(now.Sub(m.lastUpdate).Milliseconds())
 			m.lastUpdate = now
 			m.updateIndex()
 		}
@@ -89,10 +95,10 @@ func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-	case TimeUpdateMsg:
-		cmd = tea.Batch(updateCurrent(), tickTime())
+	case timeUpdateMsg:
+		cmd = tea.Batch(updateCurrent(m.client), tickTime())
 
-	case LyricsUpdateMsg:
+	case lyricsUpdateMsg:
 		m.lines = msg
 		m.updateIndex()
 
@@ -100,12 +106,12 @@ func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
-		// fixing delay
+
 		case "+":
 			m.audioDelay += 100
 		case "-":
 			m.audioDelay -= 100
-		// align
+
 		case "left":
 			m.hAlignment -= 0.5
 			if m.hAlignment < 0 {
@@ -116,16 +122,16 @@ func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			if m.hAlignment > 1 {
 				m.hAlignment = 1
 			}
-		// move
+
 		case "up":
-			if !m.Playing || (len(m.lines) > 1 && m.lines[1].Time == 0) {
+			if !m.playing || (len(m.lines) > 1 && m.lines[1].Time == 0) {
 				m.index -= 1
 				if m.index < 0 {
 					m.index = 0
 				}
 			}
 		case "down":
-			if !m.Playing || (len(m.lines) > 1 && m.lines[1].Time == 0) {
+			if !m.playing || (len(m.lines) > 1 && m.lines[1].Time == 0) {
 				m.index += 1
 				if m.index >= len(m.lines) {
 					m.index = len(m.lines) - 1
@@ -211,11 +217,11 @@ func (m *model) updateIndex() {
 		return
 	}
 
-	if !m.Playing || m.lines[1].Time == 0 {
+	if !m.playing || m.lines[1].Time == 0 {
 		return
 	}
 
-	position := m.Position + m.audioDelay
+	position := m.position + m.audioDelay
 
 	if position >= m.lines[m.index].Time {
 		if m.index == len(m.lines)-1 {
@@ -246,7 +252,7 @@ func (m *model) updateIndex() {
 	m.index = len(m.lines) - 1
 }
 
-func updateCurrent() tea.Cmd {
+func updateCurrent(client *spotify.SpotifyClient) tea.Cmd {
 	return func() tea.Msg {
 		current, err := client.Current()
 		if err != nil {
@@ -255,11 +261,11 @@ func updateCurrent() tea.Cmd {
 		if current == nil {
 			return nil
 		}
-		return CurrentUpdateMsg(current)
+		return currentUpdateMsg(current)
 	}
 }
 
-func updateLyrics(id string) tea.Cmd {
+func updateLyrics(client *spotify.SpotifyClient, id string) tea.Cmd {
 	return func() tea.Msg {
 		l, err := client.Lyrics(id)
 		if err != nil {
@@ -268,18 +274,18 @@ func updateLyrics(id string) tea.Cmd {
 		if l == nil {
 			return nil
 		}
-		return LyricsUpdateMsg(l)
+		return lyricsUpdateMsg(l)
 	}
 }
 
 func tickPosition() tea.Cmd {
 	return tea.Tick(TimerInterval*time.Millisecond, func(t time.Time) tea.Msg {
-		return PositionUpdateMsg(true)
+		return positionUpdateMsg(true)
 	})
 }
 
 func tickTime() tea.Cmd {
 	return tea.Tick(StatusUpdateInterval*time.Millisecond, func(t time.Time) tea.Msg {
-		return TimeUpdateMsg(true)
+		return timeUpdateMsg(true)
 	})
 }
