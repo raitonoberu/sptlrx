@@ -19,27 +19,21 @@ const (
 	StatusUpdateInterval = 3000
 )
 
-var (
-	faintStyle = gloss.NewStyle().Faint(true)
-	boldStyle  = gloss.NewStyle().Bold(true)
-)
-
 type currentUpdateMsg *spotify.CurrentlyPlaying
 type positionUpdateMsg bool
 type timeUpdateMsg bool
 type lyricsUpdateMsg []*spotify.LyricsLine
 
-func NewModel(client *spotify.SpotifyClient) tea.Model {
-	return &model{
-		client:     client,
-		hAlignment: gloss.Center,
-	}
-}
+type Model struct {
+	Client *spotify.SpotifyClient
 
-type model struct {
+	StyleBefore  gloss.Style
+	StyleCurrent gloss.Style
+	StyleAfter   gloss.Style
+	HAlignment   gloss.Position
+
 	w, h int
 
-	client   *spotify.SpotifyClient
 	id       string
 	playing  bool
 	position int
@@ -49,15 +43,13 @@ type model struct {
 
 	lines []*spotify.LyricsLine
 	index int
-
-	hAlignment gloss.Position
 }
 
-func (m *model) Init() tea.Cmd {
-	return tea.Batch(tickPosition(), updateCurrent(m.client), tickTime())
+func (m *Model) Init() tea.Cmd {
+	return tea.Batch(tickPosition(), updateCurrent(m.Client), tickTime())
 }
 
-func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
+func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := message.(type) {
@@ -69,7 +61,7 @@ func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		if msg.ID != m.id {
 			m.index = 0
 			m.lines = nil
-			cmd = updateLyrics(m.client, msg.ID)
+			cmd = updateLyrics(m.Client, msg.ID)
 		}
 
 		m.id = msg.ID
@@ -96,7 +88,7 @@ func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	case timeUpdateMsg:
-		cmd = tea.Batch(updateCurrent(m.client), tickTime())
+		cmd = tea.Batch(updateCurrent(m.Client), tickTime())
 
 	case lyricsUpdateMsg:
 		m.lines = msg
@@ -113,14 +105,14 @@ func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			m.audioDelay -= 100
 
 		case "left":
-			m.hAlignment -= 0.5
-			if m.hAlignment < 0 {
-				m.hAlignment = 0
+			m.HAlignment -= 0.5
+			if m.HAlignment < 0 {
+				m.HAlignment = 0
 			}
 		case "right":
-			m.hAlignment += 0.5
-			if m.hAlignment > 1 {
-				m.hAlignment = 1
+			m.HAlignment += 0.5
+			if m.HAlignment > 1 {
+				m.HAlignment = 1
 			}
 
 		case "up":
@@ -143,13 +135,13 @@ func (m *model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *model) View() string {
+func (m *Model) View() string {
 	if len(m.lines) == 0 || m.w < 1 || m.h < 1 {
 		// nothing to show
 		return ""
 	}
 
-	cur := boldStyle.Width(m.w).Align(m.hAlignment).Render(m.lines[m.index].Words)
+	cur := m.StyleCurrent.Width(m.w).Align(m.HAlignment).Render(m.lines[m.index].Words)
 	curLines := strings.Split(cur, "\n")
 	curLen := len(curLines)
 	beforeLen := (m.h - curLen) / 2
@@ -163,7 +155,7 @@ func (m *model) View() string {
 	for filledBefore < beforeLen {
 		index := beforeLen - filledBefore - 1
 		if index >= 0 && beforeIndex >= 0 {
-			line := boldStyle.Width(m.w).Align(m.hAlignment).Render(m.lines[beforeIndex].Words)
+			line := m.StyleBefore.Width(m.w).Align(m.HAlignment).Render(m.lines[beforeIndex].Words)
 			beforeIndex -= 1
 			beforeLines := strings.Split(line, "\n")
 			for i := len(beforeLines) - 1; i >= 0; i-- {
@@ -193,7 +185,7 @@ func (m *model) View() string {
 	for filledAfter < afterLen {
 		index := beforeLen + curLen + filledAfter
 		if index < len(lines) && afterIndex < len(m.lines) {
-			line := faintStyle.Width(m.w).Align(m.hAlignment).Render(m.lines[afterIndex].Words)
+			line := m.StyleAfter.Width(m.w).Align(m.HAlignment).Render(m.lines[afterIndex].Words)
 			afterIndex += 1
 			afterLines := strings.Split(line, "\n")
 			for i, line := range afterLines {
@@ -208,10 +200,10 @@ func (m *model) View() string {
 		}
 	}
 
-	return gloss.JoinVertical(m.hAlignment, lines...)
+	return gloss.JoinVertical(m.HAlignment, lines...)
 }
 
-func (m *model) updateIndex() {
+func (m *Model) updateIndex() {
 	if len(m.lines) <= 1 {
 		m.index = 0
 		return
