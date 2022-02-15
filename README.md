@@ -22,6 +22,16 @@
 ```
 yay -S sptlrx-bin
 ```
+- NixOS imperatively (via nix-env)
+```
+nix-env -iA sptlrx
+```
+- NixOS declaratively (via `/etc/nixos/configuration.nix`)
+```nix
+{
+    enviroment.systemPackages = with pkgs; [ sptlrx ];
+}
+```
 - Other
 ```
 curl -sSL instl.sh/raitonoberu/sptlrx/linux | sudo bash  
