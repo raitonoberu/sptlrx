@@ -46,7 +46,7 @@ type Model struct {
 }
 
 func (m *Model) Init() tea.Cmd {
-	return tea.Batch(tickPosition(), updateCurrent(m.Client), tickTime())
+	return tea.Batch(tickPosition(), updateCurrent(m.Client), tickTime(), tea.HideCursor)
 }
 
 func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
