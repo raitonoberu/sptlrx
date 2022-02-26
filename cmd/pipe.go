@@ -22,7 +22,7 @@ var (
 
 var pipeCmd = &coral.Command{
 	Use:   "pipe",
-	Short: "Pipes the current line to stdout",
+	Short: "Start printing the current lines in stdout",
 
 	RunE: func(cmd *coral.Command, args []string) error {
 		var clientCookie string
