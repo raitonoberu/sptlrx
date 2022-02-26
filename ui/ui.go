@@ -3,26 +3,16 @@ package ui
 import (
 	"os"
 	"runtime"
+	"sptlrx/pool"
 	"sptlrx/spotify"
 	"strings"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
 	"golang.org/x/term"
 )
 
-const (
-	// TimerIterval sets the interval for the internal timer (ms)
-	TimerInterval = 200
-	// StatusUpdateInterval sets the interval for updating Spotify status (ms)
-	StatusUpdateInterval = 3000
-)
-
-type currentUpdateMsg *spotify.CurrentlyPlaying
-type positionUpdateMsg bool
-type timeUpdateMsg bool
-type lyricsUpdateMsg []*spotify.LyricsLine
+type updateMsg pool.Update
 
 type Model struct {
 	Client *spotify.SpotifyClient
@@ -34,19 +24,18 @@ type Model struct {
 
 	w, h int
 
-	id       string
-	playing  bool
-	position int
+	channel chan pool.Update
 
-	lastUpdate time.Time
-	audioDelay int
-
-	lines []*spotify.LyricsLine
-	index int
+	lines   spotify.LyricsLines
+	index   int
+	playing bool
+	err     error
 }
 
 func (m *Model) Init() tea.Cmd {
-	return tea.Batch(tickPosition(), updateCurrent(m.Client), tickTime(), tea.HideCursor)
+	m.channel = make(chan pool.Update)
+	go pool.Listen(m.Client, m.channel)
+	return tea.Batch(waitForUpdate(m.channel), tea.HideCursor)
 }
 
 func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
@@ -57,52 +46,24 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		// does not work on Windows!
 		m.w, m.h = msg.Width, msg.Height
 
-	case currentUpdateMsg:
-		if msg.ID != m.id {
-			m.index = 0
-			m.lines = nil
-			cmd = updateLyrics(m.Client, msg.ID)
-		}
-
-		m.id = msg.ID
+	case updateMsg:
+		m.lines = msg.Lines
+		m.index = msg.Index
 		m.playing = msg.Playing
-		m.position = msg.Position
-		m.lastUpdate = time.Now()
-		m.updateIndex()
+		m.err = msg.Err
 
-	case positionUpdateMsg:
-		cmd = tickPosition()
-		if m.playing {
-			now := time.Now()
-			m.position += int(now.Sub(m.lastUpdate).Milliseconds())
-			m.lastUpdate = now
-			m.updateIndex()
-		}
-
-		// instead of WindowSizeMsg
 		if runtime.GOOS == "windows" {
 			w, h, err := term.GetSize(int(os.Stdout.Fd()))
 			if err == nil {
 				m.w, m.h = w, h
 			}
 		}
-
-	case timeUpdateMsg:
-		cmd = tea.Batch(updateCurrent(m.Client), tickTime())
-
-	case lyricsUpdateMsg:
-		m.lines = msg
-		m.updateIndex()
+		cmd = waitForUpdate(m.channel)
 
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
-			return m, tea.Quit
-
-		case "+":
-			m.audioDelay += 100
-		case "-":
-			m.audioDelay -= 100
+			cmd = tea.Quit
 
 		case "left":
 			m.HAlignment -= 0.5
@@ -116,14 +77,14 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "up":
-			if !m.playing || (len(m.lines) > 1 && m.lines[1].Time == 0) {
+			if !m.playing || !m.lines.Timesynced() {
 				m.index -= 1
 				if m.index < 0 {
 					m.index = 0
 				}
 			}
 		case "down":
-			if !m.playing || (len(m.lines) > 1 && m.lines[1].Time == 0) {
+			if !m.playing || !m.lines.Timesynced() {
 				m.index += 1
 				if m.index >= len(m.lines) {
 					m.index = len(m.lines) - 1
@@ -136,12 +97,26 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m *Model) View() string {
-	if len(m.lines) == 0 || m.w < 1 || m.h < 1 {
-		// nothing to show
+	if m.w < 1 || m.h < 1 {
+		return ""
+	}
+	if m.err != nil {
+		return gloss.PlaceVertical(
+			m.h, gloss.Center,
+			m.StyleCurrent.
+				Align(gloss.Center).
+				Width(m.w).
+				Render(m.err.Error()),
+		)
+	}
+	if len(m.lines) == 0 {
 		return ""
 	}
 
-	cur := m.StyleCurrent.Width(m.w).Align(m.HAlignment).Render(m.lines[m.index].Words)
+	cur := m.StyleCurrent.
+		Width(m.w).
+		Align(m.HAlignment).
+		Render(m.lines[m.index].Words)
 	curLines := strings.Split(cur, "\n")
 	curLen := len(curLines)
 	beforeLen := (m.h - curLen) / 2
@@ -155,7 +130,10 @@ func (m *Model) View() string {
 	for filledBefore < beforeLen {
 		index := beforeLen - filledBefore - 1
 		if index >= 0 && beforeIndex >= 0 {
-			line := m.StyleBefore.Width(m.w).Align(m.HAlignment).Render(m.lines[beforeIndex].Words)
+			line := m.StyleBefore.
+				Width(m.w).
+				Align(m.HAlignment).
+				Render(m.lines[beforeIndex].Words)
 			beforeIndex -= 1
 			beforeLines := strings.Split(line, "\n")
 			for i := len(beforeLines) - 1; i >= 0; i-- {
@@ -185,7 +163,10 @@ func (m *Model) View() string {
 	for filledAfter < afterLen {
 		index := beforeLen + curLen + filledAfter
 		if index < len(lines) && afterIndex < len(m.lines) {
-			line := m.StyleAfter.Width(m.w).Align(m.HAlignment).Render(m.lines[afterIndex].Words)
+			line := m.StyleAfter.
+				Width(m.w).
+				Align(m.HAlignment).
+				Render(m.lines[afterIndex].Words)
 			afterIndex += 1
 			afterLines := strings.Split(line, "\n")
 			for i, line := range afterLines {
@@ -203,81 +184,8 @@ func (m *Model) View() string {
 	return gloss.JoinVertical(m.HAlignment, lines...)
 }
 
-func (m *Model) updateIndex() {
-	if len(m.lines) <= 1 {
-		m.index = 0
-		return
-	}
-
-	if !m.playing || m.lines[1].Time == 0 {
-		return
-	}
-
-	position := m.position + m.audioDelay
-
-	if position >= m.lines[m.index].Time {
-		if m.index == len(m.lines)-1 {
-			return
-		}
-		if position < m.lines[m.index+1].Time {
-			return
-		} else {
-			// search after
-			for i, line := range m.lines[m.index:] {
-				if position < line.Time {
-					m.index = m.index + i - 1
-					return
-				}
-			}
-		}
-	}
-	// search before
-	for i, line := range m.lines {
-		if position < line.Time {
-			if i != 0 {
-				m.index = i - 1
-				return
-			}
-			return
-		}
-	}
-	m.index = len(m.lines) - 1
-}
-
-func updateCurrent(client *spotify.SpotifyClient) tea.Cmd {
+func waitForUpdate(ch chan pool.Update) tea.Cmd {
 	return func() tea.Msg {
-		current, err := client.Current()
-		if err != nil {
-			panic(err)
-		}
-		if current == nil {
-			return nil
-		}
-		return currentUpdateMsg(current)
+		return updateMsg(<-ch)
 	}
-}
-
-func updateLyrics(client *spotify.SpotifyClient, id string) tea.Cmd {
-	return func() tea.Msg {
-		l, err := client.Lyrics(id)
-		if err != nil {
-			panic(err)
-		}
-		if l == nil {
-			return nil
-		}
-		return lyricsUpdateMsg(l)
-	}
-}
-
-func tickPosition() tea.Cmd {
-	return tea.Tick(TimerInterval*time.Millisecond, func(t time.Time) tea.Msg {
-		return positionUpdateMsg(true)
-	})
-}
-
-func tickTime() tea.Cmd {
-	return tea.Tick(StatusUpdateInterval*time.Millisecond, func(t time.Time) tea.Msg {
-		return timeUpdateMsg(true)
-	})
 }
