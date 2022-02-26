@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	FlagLength   int
-	FlagOverflow string
+	FlagLength       int
+	FlagOverflow     string
+	FlagIgnoreErrors bool
 )
 
 var pipeCmd = &coral.Command{
@@ -51,35 +52,37 @@ var pipeCmd = &coral.Command{
 
 		for update := range ch {
 			if update.Err != nil {
-				fmt.Println(err.Error())
+				if !FlagIgnoreErrors {
+					fmt.Println(err.Error())
+				}
+				continue
 			}
-			if update.Lines != nil && update.Lines.Timesynced() {
-				line := update.Lines[update.Index].Words
-				if FlagLength == 0 {
-					fmt.Println(line)
-				} else {
-					// TODO: find out if there is a better way to cut the line
-					switch FlagOverflow {
-					case "word":
-						s := wordwrap.String(line, FlagLength)
-						fmt.Println(strings.Split(s, "\n")[0])
-					case "none":
-						s := wrap.String(line, FlagLength)
-						fmt.Println(strings.Split(s, "\n")[0])
-					case "ellipsis":
-						s := wrap.String(line, FlagLength)
-						lines := strings.Split(s, "\n")
-						if len(lines) == 1 {
-							fmt.Println(lines[0])
-						} else {
-							s := wrap.String(lines[0], FlagLength-3)
-							fmt.Println(strings.Split(s, "\n")[0] + "...")
-						}
+			if update.Lines == nil || !update.Lines.Timesynced() {
+				fmt.Println("")
+				continue
+			}
+			line := update.Lines[update.Index].Words
+			if FlagLength == 0 {
+				fmt.Println(line)
+			} else {
+				// TODO: find out if there is a better way to cut the line
+				switch FlagOverflow {
+				case "word":
+					s := wordwrap.String(line, FlagLength)
+					fmt.Println(strings.Split(s, "\n")[0])
+				case "none":
+					s := wrap.String(line, FlagLength)
+					fmt.Println(strings.Split(s, "\n")[0])
+				case "ellipsis":
+					s := wrap.String(line, FlagLength)
+					lines := strings.Split(s, "\n")
+					if len(lines) == 1 {
+						fmt.Println(lines[0])
+					} else {
+						s := wrap.String(lines[0], FlagLength-3)
+						fmt.Println(strings.Split(s, "\n")[0] + "...")
 					}
 				}
-			} else {
-				// no lyrics or not timesynced
-				fmt.Println("")
 			}
 		}
 		return nil
@@ -90,4 +93,5 @@ func init() {
 	pipeCmd.Flags().StringVar(&FlagCookie, "cookie", "", "your cookie")
 	pipeCmd.Flags().IntVar(&FlagLength, "length", 0, "max length of line")
 	pipeCmd.Flags().StringVar(&FlagOverflow, "overflow", "word", "how to wrap an overflowed line (none/word/ellipsis)")
+	pipeCmd.Flags().BoolVar(&FlagIgnoreErrors, "ignore-errors", false, "don't print errors")
 }
