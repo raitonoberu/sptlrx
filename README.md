@@ -13,6 +13,7 @@
 - Fully compatible with [spotifyd](https://github.com/Spotifyd/spotifyd).
 - Works well with long lines & Unicode characters.
 - Easy to use customization.
+- Allows piping to stdout.
 - Single binary & cross-plaftorm.
 
 ## Installation
@@ -23,15 +24,9 @@
 ```
 yay -S sptlrx-bin
 ```
-- NixOS imperatively (via nix-env)
+- NixOS ([@MoritzBoehme](https://github.com/MoritzBoehme))
 ```
 nix-env -iA sptlrx
-```
-- NixOS declaratively (via `/etc/nixos/configuration.nix`)
-```nix
-{
-    enviroment.systemPackages = with pkgs; [ sptlrx ];
-}
 ```
 - Other
 ```
