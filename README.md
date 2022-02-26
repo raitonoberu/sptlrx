@@ -62,9 +62,9 @@ sptlrx --current "bold,#FFDFD3,#957DAD" --before "104,faint,italic" --after "104
 ```
 List of allowed styles: `bold`, `italic`, `underline`, `strikethrough`, `blink`, `faint`. The colors can be either in HEX format, or ANSI 0-255. The first color represents the foreground, the second represents the background. **Note that styles will not work if your terminal does not support them.**
 
-### Delay
+### Piping
 
-For some reason unknown to me, there is a delay in the lyrics on some devices. You can manually adjust the delay by using the "**+**" and "**-**" symbols on the keyboard (adds or subtracts 100 ms).
+Run `sptlrx pipe` to start printing the current lines in stdout. This can be used in various status bars and other applications. You can specify the maximum line length and overflow (run `sptlrx pipe -h` for help).
 
 ## License
 
