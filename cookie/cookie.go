@@ -18,47 +18,42 @@ func init() {
 	Directory = path.Join(d, "sptlrx")
 }
 
-func Load() string {
+func Load() (string, error) {
 	cookiePath := path.Join(Directory, "cookie.txt")
 	cookieFile, err := os.Open(cookiePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return ""
+			return "", nil
 		} else {
-			log.Fatal(err)
+			return "", err
 		}
 	}
 	defer cookieFile.Close()
 
 	b, err := ioutil.ReadAll(cookieFile)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	return string(b)
+	return string(b), nil
 }
 
-func Save(cookie string) {
+func Save(cookie string) error {
 	err := os.MkdirAll(Directory, os.ModePerm)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	cookieFile, err := os.Create(path.Join(Directory, "cookie.txt"))
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer cookieFile.Close()
 
 	_, err = cookieFile.Write([]byte(cookie))
-	if err != nil {
-		log.Fatal(err)
-	}
+	return err
 }
 
-func Clear() {
-	err := os.Remove(path.Join(Directory, "cookie.txt"))
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		log.Fatal(err)
-	}
+func Clear() error {
+	return os.Remove(path.Join(Directory, "cookie.txt"))
 }

@@ -12,6 +12,7 @@
 - Timesynced lyrics in your terminal.
 - Fully compatible with [spotifyd](https://github.com/Spotifyd/spotifyd).
 - Works well with long lines & Unicode characters.
+- Easy to use customization.
 - Single binary & cross-plaftorm.
 
 ## Installation
@@ -59,17 +60,21 @@ Since Spotify requires a special web token to display song lyrics, you need to s
 4. Scroll down to the `Request Headers`, right click the `cookie` field and select `Copy value`.
 5. Paste it when you are asked.
 
-Another way to set cookie is to set the `SPOTIFY_COOKIE` enviroment variable. You can always clear cookie by running `sptlrx --clear`.
+You can also set the `SPOTIFY_COOKIE` enviroment variable or pass the `--cookie` flag, and your cookie will be saved on the next run. You can always clear cookie by running `sptlrx clear`.
 
 ## Information
 
-### In development
+### Styling
 
-`sptlrx` is pretty much ready to use, however you may encounter some bugs. Please open a new issue so that we can fix it quickly. Also, I plan to add additional settings, such as PC-like mode, color text and more. Stay tuned 😉
+There are three special flags for applying custom colors and styles to lines: `--current`, `--before` and `--after`. The syntax for all flags is the same - pass styles and colors separated by commas. Example:
+```sh
+sptlrx --current "bold,#FFDFD3,#957DAD" --before "104,faint,italic" --after "104,faint"
+```
+List of allowed styles: `bold`, `italic`, `underline`, `strikethrough`, `blink`, `faint`. The colors can be either in HEX format, or ANSI 0-255. The first color represents the foreground, the second represents the background. **Note that styles will not work if your terminal does not support them.**
 
-### Delay
+### Piping
 
-For some reason unknown to me, there is a delay in the lyrics on some devices. You can manually adjust the delay by using the "**+**" and "**-**" symbols on the keyboard (adds or subtracts 100 ms).
+Run `sptlrx pipe` to start printing the current lines in stdout. This can be used in various status bars and other applications. You can specify the maximum line length and overflow (run `sptlrx pipe -h` for help).
 
 ## License
 

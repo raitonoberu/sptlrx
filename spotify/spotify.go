@@ -70,7 +70,7 @@ func (c *SpotifyClient) Current() (*CurrentlyPlaying, error) {
 	}, nil
 }
 
-func (c *SpotifyClient) Lyrics(spotifyID string) ([]*LyricsLine, error) {
+func (c *SpotifyClient) Lyrics(spotifyID string) (LyricsLines, error) {
 	err := c.checkToken()
 	if err != nil {
 		return nil, err
