@@ -48,7 +48,7 @@ var rootCmd = &coral.Command{
 	Use:          "sptlrx",
 	Short:        "Spotify lyrics in your terminal",
 	Long:         "A CLI app that shows time-synced Spotify lyrics in your terminal.",
-	Version:      "v0.1.0",
+	Version:      "v0.2.0",
 	SilenceUsage: true,
 
 	RunE: func(cmd *coral.Command, args []string) error {
