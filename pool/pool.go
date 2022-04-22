@@ -1,15 +1,9 @@
 package pool
 
 import (
+	"sptlrx/config"
 	"sptlrx/spotify"
 	"time"
-)
-
-const (
-	// TimerIterval sets the interval for the internal timer (ms)
-	TimerInterval = 200
-	// StatusUpdateInterval sets the interval for updating Spotify status (ms)
-	StatusUpdateInterval = 3000
 )
 
 type Update struct {
@@ -25,7 +19,7 @@ type statusUpdate struct {
 	err    error
 }
 
-func Listen(client *spotify.SpotifyClient, ch chan Update) {
+func Listen(client *spotify.SpotifyClient, conf *config.Config, ch chan Update) {
 	var id string
 	var playing bool
 	var position int
@@ -38,8 +32,8 @@ func Listen(client *spotify.SpotifyClient, ch chan Update) {
 		updateCh = make(chan statusUpdate, 1)
 	)
 
-	go listenTimer(timerCh)
-	go listenUpdate(client, updateCh)
+	go listenTimer(timerCh, conf.TimerInterval)
+	go listenUpdate(client, updateCh, conf.UpdateInterval)
 
 	var lastUpdate = time.Now()
 
@@ -116,21 +110,21 @@ func Listen(client *spotify.SpotifyClient, ch chan Update) {
 	}
 }
 
-func listenTimer(ch chan int) {
+func listenTimer(ch chan int, interval int) {
 	for {
 		ch <- 0
-		time.Sleep(time.Millisecond * TimerInterval)
+		time.Sleep(time.Millisecond * time.Duration(interval))
 	}
 }
 
-func listenUpdate(client *spotify.SpotifyClient, ch chan statusUpdate) {
+func listenUpdate(client *spotify.SpotifyClient, ch chan statusUpdate, interval int) {
 	for {
 		status, err := client.Current()
 		ch <- statusUpdate{
 			status: status,
 			err:    err,
 		}
-		time.Sleep(time.Millisecond * StatusUpdateInterval)
+		time.Sleep(time.Millisecond * time.Duration(interval))
 	}
 }
 

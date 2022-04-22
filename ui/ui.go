@@ -3,6 +3,7 @@ package ui
 import (
 	"os"
 	"runtime"
+	"sptlrx/config"
 	"sptlrx/pool"
 	"sptlrx/spotify"
 	"strings"
@@ -16,11 +17,12 @@ type updateMsg pool.Update
 
 type Model struct {
 	Client *spotify.SpotifyClient
+	Config *config.Config
 
-	StyleBefore  gloss.Style
-	StyleCurrent gloss.Style
-	StyleAfter   gloss.Style
-	HAlignment   gloss.Position
+	styleBefore  gloss.Style
+	styleCurrent gloss.Style
+	styleAfter   gloss.Style
+	hAlignment   gloss.Position
 
 	w, h int
 
@@ -33,8 +35,20 @@ type Model struct {
 }
 
 func (m *Model) Init() tea.Cmd {
+	m.styleBefore = m.Config.Style.Before.Parse()
+	m.styleCurrent = m.Config.Style.Current.Parse()
+	m.styleAfter = m.Config.Style.After.Parse()
+
+	m.hAlignment = 0.5
+	switch m.Config.Style.HAlignment {
+	case "left":
+		m.hAlignment = 0
+	case "right":
+		m.hAlignment = 1
+	}
+
 	m.channel = make(chan pool.Update)
-	go pool.Listen(m.Client, m.channel)
+	go pool.Listen(m.Client, m.Config, m.channel)
 	return tea.Batch(waitForUpdate(m.channel), tea.HideCursor)
 }
 
@@ -66,14 +80,14 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			cmd = tea.Quit
 
 		case "left":
-			m.HAlignment -= 0.5
-			if m.HAlignment < 0 {
-				m.HAlignment = 0
+			m.hAlignment -= 0.5
+			if m.hAlignment < 0 {
+				m.hAlignment = 0
 			}
 		case "right":
-			m.HAlignment += 0.5
-			if m.HAlignment > 1 {
-				m.HAlignment = 1
+			m.hAlignment += 0.5
+			if m.hAlignment > 1 {
+				m.hAlignment = 1
 			}
 
 		case "up":
@@ -103,7 +117,7 @@ func (m *Model) View() string {
 	if m.err != nil {
 		return gloss.PlaceVertical(
 			m.h, gloss.Center,
-			m.StyleCurrent.
+			m.styleCurrent.
 				Align(gloss.Center).
 				Width(m.w).
 				Render(m.err.Error()),
@@ -113,9 +127,9 @@ func (m *Model) View() string {
 		return ""
 	}
 
-	cur := m.StyleCurrent.
+	cur := m.styleCurrent.
 		Width(m.w).
-		Align(m.HAlignment).
+		Align(m.hAlignment).
 		Render(m.lines[m.index].Words)
 	curLines := strings.Split(cur, "\n")
 	curLen := len(curLines)
@@ -130,9 +144,9 @@ func (m *Model) View() string {
 	for filledBefore < beforeLen {
 		index := beforeLen - filledBefore - 1
 		if index >= 0 && beforeIndex >= 0 {
-			line := m.StyleBefore.
+			line := m.styleBefore.
 				Width(m.w).
-				Align(m.HAlignment).
+				Align(m.hAlignment).
 				Render(m.lines[beforeIndex].Words)
 			beforeIndex -= 1
 			beforeLines := strings.Split(line, "\n")
@@ -163,9 +177,9 @@ func (m *Model) View() string {
 	for filledAfter < afterLen {
 		index := beforeLen + curLen + filledAfter
 		if index < len(lines) && afterIndex < len(m.lines) {
-			line := m.StyleAfter.
+			line := m.styleAfter.
 				Width(m.w).
-				Align(m.HAlignment).
+				Align(m.hAlignment).
 				Render(m.lines[afterIndex].Words)
 			afterIndex += 1
 			afterLines := strings.Split(line, "\n")
@@ -181,7 +195,7 @@ func (m *Model) View() string {
 		}
 	}
 
-	return gloss.JoinVertical(m.HAlignment, lines...)
+	return gloss.JoinVertical(m.hAlignment, lines...)
 }
 
 func waitForUpdate(ch chan pool.Update) tea.Cmd {

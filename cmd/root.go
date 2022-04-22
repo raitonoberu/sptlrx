@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sptlrx/cookie"
+	"sptlrx/config"
 	"sptlrx/spotify"
 	"sptlrx/ui"
-	"strconv"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	gloss "github.com/charmbracelet/lipgloss"
 	"github.com/muesli/coral"
 )
 
@@ -40,8 +38,10 @@ var (
 	FlagStyleBefore  string
 	FlagStyleCurrent string
 	FlagStyleAfter   string
+	FlagHAlignment   string
 
-	FlagHAlignment string
+	FlagTimerInterval  int
+	FlagUpdateInterval int
 )
 
 var rootCmd = &coral.Command{
@@ -52,51 +52,60 @@ var rootCmd = &coral.Command{
 	SilenceUsage: true,
 
 	RunE: func(cmd *coral.Command, args []string) error {
-		var clientCookie string
+		var conf *config.Config
+
+		conf, err := config.Load()
+		if err != nil {
+			return fmt.Errorf("couldn't load config: %w", err)
+		}
+		if conf == nil {
+			conf = config.New()
+			fmt.Print(banner)
+			fmt.Printf("Config will be stored in %s\n", config.Directory)
+			config.Save(conf)
+		}
 
 		if FlagCookie != "" {
-			clientCookie = FlagCookie
+			conf.Cookie = FlagCookie
 		} else if envCookie := os.Getenv("SPOTIFY_COOKIE"); envCookie != "" {
-			clientCookie = envCookie
-		} else {
-			fileCookie, err := cookie.Load()
-			if err != nil {
-				return fmt.Errorf("couldn't load cookie: %w", err)
-			}
-			clientCookie = fileCookie
+			conf.Cookie = envCookie
 		}
 
-		if clientCookie == "" {
-			fmt.Print(banner)
-			fmt.Printf("Cookie will be stored in %s\n", cookie.Directory)
+		if conf.Cookie == "" {
 			fmt.Print(help)
-			ask("Enter your cookie:", &clientCookie)
-			fmt.Println("You can always clear cookie by running 'sptlrx clear'.")
+			ask("Enter your cookie:", &conf.Cookie)
+			config.Save(conf)
 		}
 
-		client, err := spotify.NewClient(clientCookie)
+		client, err := spotify.NewClient(conf.Cookie)
 		if err != nil {
 			return fmt.Errorf("couldn't create client: %w", err)
 		}
-		if err := cookie.Save(clientCookie); err != nil {
-			return fmt.Errorf("couldn't save cookie: %w", err)
+
+		if cmd.Flags().Changed("before") {
+			conf.Style.Before = parseStyleFlag(FlagStyleBefore)
+		}
+		if cmd.Flags().Changed("current") {
+			conf.Style.Current = parseStyleFlag(FlagStyleCurrent)
+		}
+		if cmd.Flags().Changed("after") {
+			conf.Style.After = parseStyleFlag(FlagStyleAfter)
+		}
+		if cmd.Flags().Changed("halign") {
+			conf.Style.HAlignment = FlagHAlignment
 		}
 
-		hAlignment := 0.5
-		switch FlagHAlignment {
-		case "left":
-			hAlignment = 0
-		case "right":
-			hAlignment = 1
+		if cmd.Flags().Changed("tinterval") {
+			conf.TimerInterval = FlagTimerInterval
+		}
+		if cmd.Flags().Changed("uinterval") {
+			conf.UpdateInterval = FlagUpdateInterval
 		}
 
 		p := tea.NewProgram(
 			&ui.Model{
-				Client:       client,
-				HAlignment:   gloss.Position(hAlignment),
-				StyleBefore:  parseStyle(FlagStyleBefore),
-				StyleCurrent: parseStyle(FlagStyleCurrent),
-				StyleAfter:   parseStyle(FlagStyleAfter),
+				Client: client,
+				Config: conf,
 			},
 			tea.WithAltScreen(),
 		)
@@ -126,63 +135,45 @@ func ask(what string, answer *string) {
 	}
 }
 
-func parseStyle(value string) gloss.Style {
-	var style gloss.Style
-
-	if value == "" {
-		return style
-	}
+func parseStyleFlag(value string) config.StyleConfig {
+	var style config.StyleConfig
 
 	for _, part := range strings.Split(value, ",") {
 		switch part {
 		case "bold":
-			style = style.Bold(true)
+			style.Bold = true
 		case "italic":
-			style = style.Italic(true)
+			style.Italic = true
 		case "underline":
-			style = style.Underline(true)
+			style.Undeline = true
 		case "strikethrough":
-			style = style.Strikethrough(true)
+			style.Strikethrough = true
 		case "blink":
-			style = style.Blink(true)
+			style.Blink = true
 		case "faint":
-			style = style.Faint(true)
+			style.Faint = true
 		default:
-			if validateColor(part) {
-				if style.GetForeground() == (gloss.NoColor{}) {
-					style = style.Foreground(gloss.Color(part))
-				} else {
-					style = style.Background(gloss.Color(part))
-					style.ColorWhitespace(false)
-				}
-			} else {
-				fmt.Println("Invalid style:", part)
+			if style.Foreground == "" {
+				style.Foreground = part
+			} else if style.Background == "" {
+				style.Background = part
 			}
 		}
 	}
 	return style
 }
 
-func validateColor(color string) bool {
-	if _, err := strconv.Atoi(color); err == nil {
-		return true
-	}
-	if strings.HasPrefix(color, "#") {
-		return true
-	}
-	return false
-}
-
 func init() {
-	rootCmd.Flags().StringVar(&FlagCookie, "cookie", "", "your cookie")
+	rootCmd.PersistentFlags().StringVar(&FlagCookie, "cookie", "", "your cookie")
 
 	rootCmd.Flags().StringVar(&FlagStyleBefore, "before", "bold", "style of the lines before the current ones")
 	rootCmd.Flags().StringVar(&FlagStyleCurrent, "current", "bold", "style of the current lines")
 	rootCmd.Flags().StringVar(&FlagStyleAfter, "after", "faint", "style of the lines after the current ones")
-
 	rootCmd.Flags().StringVar(&FlagHAlignment, "halign", "center", "initial horizontal alignment (left/center/right)")
 
-	rootCmd.AddCommand(clearCmd)
+	rootCmd.PersistentFlags().IntVar(&FlagTimerInterval, "tinterval", 200, "interval for the internal timer (ms)")
+	rootCmd.PersistentFlags().IntVar(&FlagUpdateInterval, "uinterval", 200, "interval for updating playback status (ms)")
+
 	rootCmd.AddCommand(pipeCmd)
 }
 
