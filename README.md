@@ -9,7 +9,6 @@
 
 ## Features
 
-- Timesynced lyrics in your terminal.
 - Compatible with Spotify, MPD, Mopidy and MPRIS.
 - Works well with long lines & Unicode characters.
 - Easy to use customization.
