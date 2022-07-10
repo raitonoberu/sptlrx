@@ -1,6 +1,6 @@
 ## Building sptlrx
 
-Make sure you have [Go 1.17+](https://go.dev/) installed.
+Make sure you have [Go 1.18+](https://go.dev/) installed.
 
 ### Clone the repository
 
