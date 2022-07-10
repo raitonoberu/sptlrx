@@ -2,38 +2,44 @@ package pool
 
 import (
 	"sptlrx/config"
-	"sptlrx/spotify"
+	"sptlrx/lyrics"
+	"sptlrx/player"
 	"time"
 )
 
 type Update struct {
-	Lines   spotify.LyricsLines
+	Lines   []lyrics.Line
 	Index   int
 	Playing bool
 
 	Err error
 }
 
-type statusUpdate struct {
-	status *spotify.CurrentlyPlaying
-	err    error
+type stateUpdate struct {
+	state *player.State
+	err   error
 }
 
-func Listen(client *spotify.SpotifyClient, conf *config.Config, ch chan Update) {
+func Listen(
+	player player.Player,
+	provider lyrics.Provider,
+	conf *config.Config,
+	ch chan Update,
+) {
 	var id string
 	var playing bool
 	var position int
 
-	var lines spotify.LyricsLines
+	var lines []lyrics.Line
 	var index int
 
 	var (
 		timerCh  = make(chan int, 1)
-		updateCh = make(chan statusUpdate, 1)
+		updateCh = make(chan stateUpdate, 1)
 	)
 
 	go listenTimer(timerCh, conf.TimerInterval)
-	go listenUpdate(client, updateCh, conf.UpdateInterval)
+	go listenUpdate(player, updateCh, conf.UpdateInterval)
 
 	var lastUpdate = time.Now()
 
@@ -51,7 +57,7 @@ func Listen(client *spotify.SpotifyClient, conf *config.Config, ch chan Update) 
 				break
 			}
 
-			if update.status == nil {
+			if update.state == nil {
 				if lines != nil {
 					changed = true
 					id = ""
@@ -61,10 +67,10 @@ func Listen(client *spotify.SpotifyClient, conf *config.Config, ch chan Update) 
 				}
 				break
 			}
-			if update.status.ID != id {
+			if update.state.ID != id {
 				changed = true
-				id = update.status.ID
-				newLines, err := client.Lyrics(id)
+				id = update.state.ID
+				newLines, err := provider.Lyrics(id, update.state.Query)
 				if err != nil {
 					ch <- Update{
 						Err: err,
@@ -74,11 +80,11 @@ func Listen(client *spotify.SpotifyClient, conf *config.Config, ch chan Update) 
 				lines = newLines
 				index = 0
 			}
-			if update.status.Playing != playing {
+			if update.state.Playing != playing {
 				changed = true
-				playing = update.status.Playing
+				playing = update.state.Playing
 			}
-			position = update.status.Position
+			position = update.state.Position
 			newIndex := getIndex(position, index, lines)
 			if newIndex != index {
 				changed = true
@@ -86,7 +92,7 @@ func Listen(client *spotify.SpotifyClient, conf *config.Config, ch chan Update) 
 			}
 
 		case <-timerCh:
-			if playing && lines.Timesynced() {
+			if playing && lyrics.Timesynced(lines) {
 				now := time.Now()
 				position += int(now.Sub(lastUpdate).Milliseconds())
 				lastUpdate = now
@@ -117,18 +123,19 @@ func listenTimer(ch chan int, interval int) {
 	}
 }
 
-func listenUpdate(client *spotify.SpotifyClient, ch chan statusUpdate, interval int) {
+func listenUpdate(player player.Player, ch chan stateUpdate, interval int) {
 	for {
-		status, err := client.Current()
-		ch <- statusUpdate{
-			status: status,
-			err:    err,
+		state, err := player.State()
+		ch <- stateUpdate{
+			state: state,
+			err:   err,
 		}
 		time.Sleep(time.Millisecond * time.Duration(interval))
 	}
 }
 
-func getIndex(position, curIndex int, lines []*spotify.LyricsLine) int {
+// getIndex is an effective alghoritm to get current line's index
+func getIndex(position, curIndex int, lines []lyrics.Line) int {
 	if len(lines) <= 1 {
 		return 0
 	}

@@ -2,9 +2,15 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"sptlrx/player"
+	"sptlrx/services/mopidy"
+	"sptlrx/services/mpd"
+	"sptlrx/services/mpris"
+	"sptlrx/services/spotify"
 	"strconv"
 	"strings"
 
@@ -14,6 +20,7 @@ import (
 )
 
 var Directory string
+var Path string
 
 func init() {
 	d, err := os.UserConfigDir()
@@ -21,20 +28,21 @@ func init() {
 		panic(err)
 	}
 	Directory = path.Join(d, "sptlrx")
+	Path = path.Join(Directory, "config.yaml")
 }
 
 type Config struct {
-	Cookie string `yaml:"cookie"`
-	// Player         string `default:"spotify" yaml:"player"`
-	TimerInterval  int `default:"200" yaml:"timerInterval"`
-	UpdateInterval int `default:"3000" yaml:"updateInterval"`
+	Cookie         string `yaml:"cookie"`
+	Player         string `default:"spotify" yaml:"player"`
+	TimerInterval  int    `default:"200" yaml:"timerInterval"`
+	UpdateInterval int    `default:"3000" yaml:"updateInterval"`
 
 	Style struct {
 		HAlignment string `default:"center" yaml:"hAlignment"`
 
-		Before  StyleConfig `default:"{\"bold\": true}" yaml:"before"`
-		Current StyleConfig `default:"{\"bold\": true}" yaml:"current"`
-		After   StyleConfig `default:"{\"faint\": true}" yaml:"after"`
+		Before  Style `default:"{\"bold\": true}" yaml:"before"`
+		Current Style `default:"{\"bold\": true}" yaml:"current"`
+		After   Style `default:"{\"faint\": true}" yaml:"after"`
 	} `yaml:"style"`
 
 	Pipe struct {
@@ -43,16 +51,14 @@ type Config struct {
 		IgnoreErrors bool   `default:"true" yaml:"ignoreErrors"`
 	} `yaml:"pipe"`
 
-	// Mpd struct {
-	// 	Hostname string `default:"127.0.0.1" yaml:"hostname"`
-	// 	Port     int    `default:"6600" yaml:"port"`
-	// 	Password string `yaml:"password"`
-	// } `yaml:"mpd"`
+	Mpd struct {
+		Address  string `default:"127.0.0.1:6600" yaml:"address"`
+		Password string `yaml:"password"`
+	} `yaml:"mpd"`
 
-	// Mopidy struct {
-	// 	Hostname string `default:"127.0.0.1" yaml:"hostname"`
-	// 	Port     int    `default:"6680" yaml:"port"`
-	// } `yaml:"mopidy"`
+	Mopidy struct {
+		Address string `default:"127.0.0.1:6680" yaml:"address"`
+	} `yaml:"mopidy"`
 }
 
 func New() *Config {
@@ -62,28 +68,27 @@ func New() *Config {
 }
 
 func Load() (*Config, error) {
-	file, err := os.Open(path.Join(Directory, "config.yaml"))
+	file, err := os.Open(Path)
 	if err != nil {
-		if !errors.Is(err, os.ErrNotExist) {
-			return nil, err
-		}
+		if errors.Is(err, os.ErrNotExist) {
+			// workaround for compatibility with old versions
+			cookiePath := path.Join(Directory, "cookie.txt")
+			if cookieFile, err := os.Open(cookiePath); err == nil {
+				b, err := ioutil.ReadAll(cookieFile)
+				cookieFile.Close()
 
-		// workaround for compatibility with old versions
-		if cookieFile, err := os.Open(path.Join(Directory, "cookie.txt")); err == nil {
-			b, err := ioutil.ReadAll(cookieFile)
-			cookieFile.Close()
+				os.Remove(cookiePath)
 
-			os.Remove(path.Join(Directory, "cookie.txt"))
+				if err == nil && b != nil {
+					config := New()
+					config.Cookie = string(b)
+					Save(config)
 
-			if err == nil && b != nil {
-				config := New()
-				config.Cookie = string(b)
-				Save(config)
-
-				return config, nil
+					return config, nil
+				}
 			}
 		}
-		return nil, nil
+		return nil, err
 	}
 	defer file.Close()
 
@@ -98,7 +103,7 @@ func Save(config *Config) error {
 		return err
 	}
 
-	file, err := os.Create(path.Join(Directory, "config.yaml"))
+	file, err := os.Create(Path)
 	if err != nil {
 		return err
 	}
@@ -119,7 +124,7 @@ func (c *Config) UnmarshalYAML(f func(interface{}) error) error {
 	return nil
 }
 
-type StyleConfig struct {
+type Style struct {
 	Background string `yaml:"background"`
 	Foreground string `yaml:"foreground"`
 
@@ -131,7 +136,7 @@ type StyleConfig struct {
 	Faint         bool `yaml:"faint"`
 }
 
-func (s StyleConfig) Parse() gloss.Style {
+func (s Style) Parse() gloss.Style {
 	var style gloss.Style
 	if s.Background != "" && validateColor(s.Background) {
 		style = style.Background(gloss.Color(s.Background))
@@ -171,4 +176,24 @@ func validateColor(color string) bool {
 		return true
 	}
 	return false
+}
+
+// GetPlayer returns a player based on config values
+func GetPlayer(conf *Config) (player.Player, error) {
+	switch conf.Player {
+	case "spotify":
+		if conf.Cookie == "" {
+			return nil, spotify.ErrInvalidCookie
+		}
+		return spotify.New(conf.Cookie)
+	case "mpd":
+		return mpd.New(conf.Mpd.Address, conf.Mpd.Password)
+	case "mopidy":
+		return mopidy.New(
+			conf.Mopidy.Address,
+		)
+	case "mpris":
+		return mpris.New()
+	}
+	return nil, fmt.Errorf("unknown player: \"%s\"", conf.Player)
 }

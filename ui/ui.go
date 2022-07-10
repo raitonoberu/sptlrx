@@ -4,8 +4,8 @@ import (
 	"os"
 	"runtime"
 	"sptlrx/config"
+	"sptlrx/lyrics"
 	"sptlrx/pool"
-	"sptlrx/spotify"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -16,8 +16,8 @@ import (
 type updateMsg pool.Update
 
 type Model struct {
-	Client *spotify.SpotifyClient
-	Config *config.Config
+	Config  *config.Config
+	Channel chan pool.Update
 
 	styleBefore  gloss.Style
 	styleCurrent gloss.Style
@@ -26,9 +26,7 @@ type Model struct {
 
 	w, h int
 
-	channel chan pool.Update
-
-	lines   spotify.LyricsLines
+	lines   []lyrics.Line
 	index   int
 	playing bool
 	err     error
@@ -47,9 +45,7 @@ func (m *Model) Init() tea.Cmd {
 		m.hAlignment = 1
 	}
 
-	m.channel = make(chan pool.Update)
-	go pool.Listen(m.Client, m.Config, m.channel)
-	return tea.Batch(waitForUpdate(m.channel), tea.HideCursor)
+	return tea.Batch(waitForUpdate(m.Channel), tea.HideCursor)
 }
 
 func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
@@ -72,7 +68,7 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.w, m.h = w, h
 			}
 		}
-		cmd = waitForUpdate(m.channel)
+		cmd = waitForUpdate(m.Channel)
 
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -91,14 +87,14 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "up":
-			if !m.playing || !m.lines.Timesynced() {
+			if !m.playing || !lyrics.Timesynced(m.lines) {
 				m.index -= 1
 				if m.index < 0 {
 					m.index = 0
 				}
 			}
 		case "down":
-			if !m.playing || !m.lines.Timesynced() {
+			if !m.playing || !lyrics.Timesynced(m.lines) {
 				m.index += 1
 				if m.index >= len(m.lines) {
 					m.index = len(m.lines) - 1

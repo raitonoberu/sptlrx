@@ -5,36 +5,43 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"net/url"
+	"sptlrx/lyrics"
+	"sptlrx/player"
+	"strings"
 	"time"
 )
 
 var (
-	ErrInvalidCookie = errors.New("invalid cookie provided")
+	ErrInvalidCookie = errors.New("invalid or empty cookie provided")
 )
 
 const tokenUrl = "https://open.spotify.com/get_access_token?reason=transport&productType=web_player"
 const lyricsUrl = "https://spclient.wg.spotify.com/color-lyrics/v2/track/"
-const currentUrl = "https://api.spotify.com/v1/me/player/currently-playing"
+const stateUrl = "https://api.spotify.com/v1/me/player/currently-playing"
+const searchUrl = "https://api.spotify.com/v1/search?"
 
-func NewClient(cookie string) (*SpotifyClient, error) {
-	c := &SpotifyClient{
+func New(cookie string) (*Client, error) {
+	c := &Client{
 		cookie: cookie,
 	}
 	return c, c.checkToken()
 }
 
-type SpotifyClient struct {
+// Client implements both player.Player and lyrics.Provider
+type Client struct {
 	cookie    string
 	token     string
 	expiresIn time.Time
 }
 
-func (c *SpotifyClient) Current() (*CurrentlyPlaying, error) {
+func (c *Client) State() (*player.State, error) {
 	err := c.checkToken()
 	if err != nil {
 		return nil, err
 	}
-	req, _ := http.NewRequest("GET", currentUrl, nil)
+
+	req, _ := http.NewRequest("GET", stateUrl, nil)
 	req.Header = http.Header{
 		"referer":          {"https://open.spotify.com/"},
 		"origin":           {"https://open.spotify.com/"},
@@ -63,14 +70,55 @@ func (c *SpotifyClient) Current() (*CurrentlyPlaying, error) {
 	if result.Item == nil {
 		return nil, nil
 	}
-	return &CurrentlyPlaying{
-		ID:       result.Item.ID,
+	return &player.State{
+		ID:       "spotify:" + result.Item.ID,
 		Position: result.Progress,
 		Playing:  result.Playing,
 	}, nil
 }
 
-func (c *SpotifyClient) Lyrics(spotifyID string) (LyricsLines, error) {
+func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
+	if strings.HasPrefix(id, "spotify:") {
+		return c.lyrics(id[8:])
+	}
+	id, err := c.search(query)
+	if err != nil {
+		return nil, err
+	}
+	return c.lyrics(id)
+}
+
+func (c *Client) search(query string) (string, error) {
+	err := c.checkToken()
+	if err != nil {
+		return "", err
+	}
+
+	url := searchUrl + url.Values{
+		"limit": {"1"},
+		"type":  {"track"},
+		"q":     {query},
+	}.Encode()
+	req, _ := http.NewRequest("GET", url, nil)
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	result := &searchBody{}
+	err = json.NewDecoder(resp.Body).Decode(result)
+	if err != nil {
+		return "", err
+	}
+	if result.Tracks.Total == 0 {
+		return "", nil
+	}
+	return result.Tracks.Items[0].ID, nil
+}
+
+func (c *Client) lyrics(spotifyID string) ([]lyrics.Line, error) {
 	err := c.checkToken()
 	if err != nil {
 		return nil, err
@@ -102,25 +150,27 @@ func (c *SpotifyClient) Lyrics(spotifyID string) (LyricsLines, error) {
 		}
 		return nil, err
 	}
-	if result.Lyrics.Lines == nil {
-		// not found
-		return nil, nil
+
+	lines := make([]lyrics.Line, len(result.Lyrics.Lines))
+	for i, l := range result.Lyrics.Lines {
+		lines[i] = lyrics.Line(l)
 	}
-	return result.Lyrics.Lines, nil
+
+	return lines, nil
 }
 
-func (c *SpotifyClient) checkToken() error {
+func (c *Client) checkToken() error {
 	if !c.tokenExpired() {
 		return nil
 	}
 	return c.updateToken()
 }
 
-func (c *SpotifyClient) tokenExpired() bool {
+func (c *Client) tokenExpired() bool {
 	return c.token == "" || time.Now().After(c.expiresIn)
 }
 
-func (c *SpotifyClient) updateToken() error {
+func (c *Client) updateToken() error {
 	req, _ := http.NewRequest("GET", tokenUrl, nil)
 	req.Header = http.Header{
 		"referer":             {"https://open.spotify.com/"},
@@ -168,7 +218,10 @@ type tokenBody struct {
 
 type lyricsBody struct {
 	Lyrics struct {
-		Lines []*LyricsLine `json:"lines"`
+		Lines []struct {
+			Time  int    `json:"startTimeMs,string"`
+			Words string `json:"words"`
+		} `json:"lines"`
 	} `json:"lyrics"`
 }
 
@@ -178,4 +231,14 @@ type currentBody struct {
 	Item     *struct {
 		ID string `json:"id"`
 	} `json:"item"`
+}
+
+type searchBody struct {
+	Tracks struct {
+		Items []struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+		} `json:"items"`
+		Total int `json:"total"`
+	} `json:"tracks"`
 }
