@@ -40,7 +40,7 @@ var rootCmd = &coral.Command{
 	Use:          "sptlrx",
 	Short:        "Time-synced lyrics in your terminal",
 	Long:         "A CLI app that shows time-synced lyrics in your terminal",
-	Version:      "v0.2.0",
+	Version:      "v1.0.0-rc1",
 	SilenceUsage: true,
 
 	RunE: func(cmd *coral.Command, args []string) error {
