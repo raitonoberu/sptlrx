@@ -175,6 +175,10 @@ Linux only. System player that supports MPRIS protocol will be used.
 
 ## Information
 
+### Source
+
+If you specify your Spotify cookie, the lyrics will be fetched using your account. Otherwise, the API [hosted by me](https://github.com/raitonoberu/lyricsapi) will be used.
+
 ### Piping
 
 Run `sptlrx pipe` to start printing the current lines to stdout. This can be used in various status bars and other applications.
