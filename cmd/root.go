@@ -54,7 +54,7 @@ var rootCmd = &coral.Command{
 			if !cmd.Flags().Changed("config") && errors.Is(err, os.ErrNotExist) {
 				conf = config.New()
 				fmt.Print(banner + "\n")
-				fmt.Printf("Config will be stored in %s\n", config.Directory)
+				fmt.Printf("Config file location: %s\n", config.Path)
 				config.Save(conf)
 			} else {
 				return fmt.Errorf("couldn't load config: %w", err)
