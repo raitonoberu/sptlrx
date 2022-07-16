@@ -1,18 +1,17 @@
 package cmd
 
 import (
-	"bufio"
+	"errors"
 	"fmt"
-	"log"
 	"os"
-	"sptlrx/cookie"
-	"sptlrx/spotify"
+	"sptlrx/config"
+	"sptlrx/lyrics"
+	"sptlrx/pool"
+	"sptlrx/services/hosted"
+	"sptlrx/services/spotify"
 	"sptlrx/ui"
-	"strconv"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	gloss "github.com/charmbracelet/lipgloss"
 	"github.com/muesli/coral"
 )
 
@@ -25,78 +24,87 @@ const banner = `
      |_|                        
 `
 
-const help = `
-How to get setup:
-
-  1. Open your browser.
+const help = `  1. Open your browser.
   2. Press F12, open the 'Network' tab and go to open.spotify.com.
   3. Click on the first request to open.spotify.com.
   4. Scroll down to the 'Request Headers', right click the 'cookie' field and select 'Copy value'.
-`
+  5. Paste it into your config file.`
 
 var (
 	FlagCookie string
-
-	FlagStyleBefore  string
-	FlagStyleCurrent string
-	FlagStyleAfter   string
-
-	FlagHAlignment string
+	FlagPlayer string
+	FlagConfig string
 )
 
 var rootCmd = &coral.Command{
 	Use:          "sptlrx",
-	Short:        "Spotify lyrics in your terminal",
-	Long:         "A CLI app that shows time-synced Spotify lyrics in your terminal.",
+	Short:        "Time-synced lyrics in your terminal",
+	Long:         "A CLI app that shows time-synced lyrics in your terminal",
 	Version:      "v0.2.0",
 	SilenceUsage: true,
 
 	RunE: func(cmd *coral.Command, args []string) error {
-		var clientCookie string
+		if cmd.Flags().Changed("config") {
+			// custom config path
+			config.Path = FlagConfig
+		}
+
+		conf, err := config.Load()
+		if err != nil {
+			if !cmd.Flags().Changed("config") && errors.Is(err, os.ErrNotExist) {
+				conf = config.New()
+				fmt.Print(banner + "\n")
+				fmt.Printf("Config will be stored in %s\n", config.Directory)
+				config.Save(conf)
+			} else {
+				return fmt.Errorf("couldn't load config: %w", err)
+			}
+		}
 
 		if FlagCookie != "" {
-			clientCookie = FlagCookie
+			conf.Cookie = FlagCookie
 		} else if envCookie := os.Getenv("SPOTIFY_COOKIE"); envCookie != "" {
-			clientCookie = envCookie
-		} else {
-			fileCookie, err := cookie.Load()
-			if err != nil {
-				return fmt.Errorf("couldn't load cookie: %w", err)
-			}
-			clientCookie = fileCookie
+			conf.Cookie = envCookie
 		}
 
-		if clientCookie == "" {
-			fmt.Print(banner)
-			fmt.Printf("Cookie will be stored in %s\n", cookie.Directory)
-			fmt.Print(help)
-			ask("Enter your cookie:", &clientCookie)
-			fmt.Println("You can always clear cookie by running 'sptlrx clear'.")
+		if cmd.Flags().Changed("player") {
+			conf.Player = FlagPlayer
 		}
 
-		client, err := spotify.NewClient(clientCookie)
+		player, err := config.GetPlayer(conf)
 		if err != nil {
-			return fmt.Errorf("couldn't create client: %w", err)
-		}
-		if err := cookie.Save(clientCookie); err != nil {
-			return fmt.Errorf("couldn't save cookie: %w", err)
+			if errors.Is(err, spotify.ErrInvalidCookie) {
+				fmt.Println("If you want to use Spotify as your player, you need to set up your cookie.")
+				fmt.Println(help)
+			}
+			return err
 		}
 
-		hAlignment := 0.5
-		switch FlagHAlignment {
-		case "left":
-			hAlignment = 0
-		case "right":
-			hAlignment = 1
+		var provider lyrics.Provider
+		if conf.Cookie != "" {
+			if spt, ok := player.(*spotify.Client); ok {
+				// use existing spotify client
+				provider = spt
+			} else {
+				// create new client
+				client, err := spotify.New(conf.Cookie)
+				if err != nil {
+					return err
+				}
+				provider = client
+			}
+		} else {
+			// use hosted provider
+			provider = hosted.New()
 		}
+
+		var ch = make(chan pool.Update)
+		go pool.Listen(player, provider, conf, ch)
 
 		p := tea.NewProgram(
 			&ui.Model{
-				Client:       client,
-				HAlignment:   gloss.Position(hAlignment),
-				StyleBefore:  parseStyle(FlagStyleBefore),
-				StyleCurrent: parseStyle(FlagStyleCurrent),
-				StyleAfter:   parseStyle(FlagStyleAfter),
+				Channel: ch,
+				Config:  conf,
 			},
 			tea.WithAltScreen(),
 		)
@@ -104,85 +112,11 @@ var rootCmd = &coral.Command{
 	},
 }
 
-func ask(what string, answer *string) {
-	var ok bool
-	scanner := bufio.NewScanner(os.Stdin)
-	for !ok {
-		fmt.Println("\n" + what)
-		scanner.Scan()
-
-		if err := scanner.Err(); err != nil {
-			log.Fatal(err)
-		}
-
-		line := strings.TrimSpace(scanner.Text())
-
-		if line != "" {
-			ok = true
-			*answer = line
-		} else {
-			fmt.Println("The value can't be empty.")
-		}
-	}
-}
-
-func parseStyle(value string) gloss.Style {
-	var style gloss.Style
-
-	if value == "" {
-		return style
-	}
-
-	for _, part := range strings.Split(value, ",") {
-		switch part {
-		case "bold":
-			style = style.Bold(true)
-		case "italic":
-			style = style.Italic(true)
-		case "underline":
-			style = style.Underline(true)
-		case "strikethrough":
-			style = style.Strikethrough(true)
-		case "blink":
-			style = style.Blink(true)
-		case "faint":
-			style = style.Faint(true)
-		default:
-			if validateColor(part) {
-				if style.GetForeground() == (gloss.NoColor{}) {
-					style = style.Foreground(gloss.Color(part))
-				} else {
-					style = style.Background(gloss.Color(part))
-					style.ColorWhitespace(false)
-				}
-			} else {
-				fmt.Println("Invalid style:", part)
-			}
-		}
-	}
-	return style
-}
-
-func validateColor(color string) bool {
-	if _, err := strconv.Atoi(color); err == nil {
-		return true
-	}
-	if strings.HasPrefix(color, "#") {
-		return true
-	}
-	return false
-}
-
 func init() {
-	rootCmd.Flags().StringVar(&FlagCookie, "cookie", "", "your cookie")
+	rootCmd.PersistentFlags().StringVarP(&FlagCookie, "cookie", "c", "", "your cookie")
+	rootCmd.PersistentFlags().StringVarP(&FlagPlayer, "player", "p", "spotify", "what player to use")
+	rootCmd.PersistentFlags().StringVar(&FlagConfig, "config", config.Path, "path to config file")
 
-	rootCmd.Flags().StringVar(&FlagStyleBefore, "before", "bold", "style of the lines before the current ones")
-	rootCmd.Flags().StringVar(&FlagStyleCurrent, "current", "bold", "style of the current lines")
-	rootCmd.Flags().StringVar(&FlagStyleAfter, "after", "faint", "style of the lines after the current ones")
-
-	rootCmd.Flags().StringVar(&FlagHAlignment, "halign", "center", "initial horizontal alignment (left/center/right)")
-
-	rootCmd.AddCommand(clearCmd)
 	rootCmd.AddCommand(pipeCmd)
 }
 

@@ -1,12 +1,13 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"os"
-	"sptlrx/cookie"
+	"sptlrx/config"
+	"sptlrx/lyrics"
 	"sptlrx/pool"
-	"sptlrx/spotify"
+	"sptlrx/services/hosted"
+	"sptlrx/services/spotify"
 	"strings"
 
 	"github.com/muesli/coral"
@@ -14,72 +15,90 @@ import (
 	"github.com/muesli/reflow/wrap"
 )
 
-var (
-	FlagLength       int
-	FlagOverflow     string
-	FlagIgnoreErrors bool
-)
-
 var pipeCmd = &coral.Command{
 	Use:   "pipe",
-	Short: "Start printing the current lines in stdout",
+	Short: "Start printing the current lines to stdout",
 
 	RunE: func(cmd *coral.Command, args []string) error {
-		var clientCookie string
+		if cmd.Flags().Changed("config") {
+			// custom config path
+			config.Path = FlagConfig
+		}
+
+		conf, err := config.Load()
+		if err != nil {
+			return fmt.Errorf("couldn't load config: %w", err)
+		}
+
+		if conf == nil {
+			conf = config.New()
+		}
 
 		if FlagCookie != "" {
-			clientCookie = FlagCookie
+			conf.Cookie = FlagCookie
 		} else if envCookie := os.Getenv("SPOTIFY_COOKIE"); envCookie != "" {
-			clientCookie = envCookie
-		} else {
-			clientCookie, _ = cookie.Load()
+			conf.Cookie = envCookie
 		}
 
-		if clientCookie == "" {
-			return errors.New("couldn't find cookie")
+		if cmd.Flags().Changed("player") {
+			conf.Player = FlagPlayer
 		}
 
-		client, err := spotify.NewClient(clientCookie)
+		player, err := config.GetPlayer(conf)
 		if err != nil {
-			return fmt.Errorf("couldn't create client: %w", err)
-		}
-		if err := cookie.Save(clientCookie); err != nil {
-			return fmt.Errorf("couldn't save cookie: %w", err)
+			return err
 		}
 
-		ch := make(chan pool.Update)
-		go pool.Listen(client, ch)
+		var provider lyrics.Provider
+		if conf.Cookie != "" {
+			if spt, ok := player.(*spotify.Client); ok {
+				// use existing spotify client
+				provider = spt
+			} else {
+				// create new client
+				client, err := spotify.New(conf.Cookie)
+				if err != nil {
+					return err
+				}
+				provider = client
+			}
+		} else {
+			// use hosted provider
+			provider = hosted.New()
+		}
+
+		var ch = make(chan pool.Update)
+		go pool.Listen(player, provider, conf, ch)
 
 		for update := range ch {
 			if update.Err != nil {
-				if !FlagIgnoreErrors {
+				if !conf.Pipe.IgnoreErrors {
 					fmt.Println(err.Error())
 				}
 				continue
 			}
-			if update.Lines == nil || !update.Lines.Timesynced() {
+			if update.Lines == nil || !lyrics.Timesynced(update.Lines) {
 				fmt.Println("")
 				continue
 			}
 			line := update.Lines[update.Index].Words
-			if FlagLength == 0 {
+			if conf.Pipe.Length == 0 {
 				fmt.Println(line)
 			} else {
-				// TODO: find out if there is a better way to cut the line
-				switch FlagOverflow {
+				switch conf.Pipe.Overflow {
 				case "word":
-					s := wordwrap.String(line, FlagLength)
+					s := wordwrap.String(line, conf.Pipe.Length)
 					fmt.Println(strings.Split(s, "\n")[0])
 				case "none":
-					s := wrap.String(line, FlagLength)
+					s := wrap.String(line, conf.Pipe.Length)
 					fmt.Println(strings.Split(s, "\n")[0])
 				case "ellipsis":
-					s := wrap.String(line, FlagLength)
+					s := wrap.String(line, conf.Pipe.Length)
 					lines := strings.Split(s, "\n")
 					if len(lines) == 1 {
 						fmt.Println(lines[0])
 					} else {
-						s := wrap.String(lines[0], FlagLength-3)
+						s := wrap.String(lines[0], conf.Pipe.Length-3)
 						fmt.Println(strings.Split(s, "\n")[0] + "...")
 					}
 				}
@@ -87,11 +106,4 @@ var pipeCmd = &coral.Command{
 		}
 		return nil
 	},
-}
-
-func init() {
-	pipeCmd.Flags().StringVar(&FlagCookie, "cookie", "", "your cookie")
-	pipeCmd.Flags().IntVar(&FlagLength, "length", 0, "max length of line")
-	pipeCmd.Flags().StringVar(&FlagOverflow, "overflow", "word", "how to wrap an overflowed line (none/word/ellipsis)")
-	pipeCmd.Flags().BoolVar(&FlagIgnoreErrors, "ignore-errors", false, "don't print errors")
 }
