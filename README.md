@@ -25,7 +25,13 @@ yay -S sptlrx-bin
 ```
 - NixOS ([@MoritzBoehme](https://github.com/MoritzBoehme))
 ```
-nix-env -iA sptlrx
+nix-env -iA nixos.sptlrx
+```
+
+or if using nixpkgs
+
+```
+nix-env -iA nixpkgs.sptlrx
 ```
 - Other
 ```
