@@ -35,7 +35,7 @@ type Config struct {
 	Cookie         string `yaml:"cookie"`
 	Player         string `default:"spotify" yaml:"player"`
 	TimerInterval  int    `default:"200" yaml:"timerInterval"`
-	UpdateInterval int    `default:"3000" yaml:"updateInterval"`
+	UpdateInterval int    `default:"2000" yaml:"updateInterval"`
 
 	Style struct {
 		HAlignment string `default:"center" yaml:"hAlignment"`

@@ -66,7 +66,7 @@ player: spotify
 # Interval of the internal timer. Determines how often the terminal will be updated.
 timerInterval: 200
 # Interval for checking the position. Doesn't really affect the precision.
-updateInterval: 3000
+updateInterval: 2000
 
 ### Style settings ###
 style:
