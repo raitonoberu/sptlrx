@@ -11,7 +11,7 @@
 
 - Compatible with Spotify, MPD, Mopidy and MPRIS.
 - Works well with long lines & Unicode characters.
-- Easy to use customization.
+- Easy to customize.
 - Allows piping to stdout.
 - Single binary & cross-plaftorm.
 
@@ -188,6 +188,16 @@ If you specify your Spotify cookie, the lyrics will be fetched using your accoun
 ### Piping
 
 Run `sptlrx pipe` to start printing the current lines to stdout. This can be used in various status bars and other applications.
+
+### Flags
+
+You can pass flags to override the style parameters defined in the config. Example:
+```sh
+sptlrx --current "bold,#FFDFD3,#957DAD" --before "104,faint,italic" --after "104,faint"
+```
+List of allowed styles: `bold`, `italic`, `underline`, `strikethrough`, `blink`, `faint`. The colors can be either in HEX format, or ANSI 0-255. The first color represents the foreground, the second represents the background.
+
+Run `sptlrx --help` to see all the flags.
 
 ## License
 
