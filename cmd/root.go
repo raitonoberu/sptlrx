@@ -10,6 +10,7 @@ import (
 	"sptlrx/services/hosted"
 	"sptlrx/services/spotify"
 	"sptlrx/ui"
+	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/muesli/coral"
@@ -34,6 +35,11 @@ var (
 	FlagCookie string
 	FlagPlayer string
 	FlagConfig string
+
+	FlagStyleBefore  string
+	FlagStyleCurrent string
+	FlagStyleAfter   string
+	FlagHAlignment   string
 )
 
 var rootCmd = &coral.Command{
@@ -98,6 +104,19 @@ var rootCmd = &coral.Command{
 			provider = hosted.New()
 		}
 
+		if cmd.Flags().Changed("before") {
+			conf.Style.Before = parseStyleFlag(FlagStyleBefore)
+		}
+		if cmd.Flags().Changed("current") {
+			conf.Style.Current = parseStyleFlag(FlagStyleCurrent)
+		}
+		if cmd.Flags().Changed("after") {
+			conf.Style.After = parseStyleFlag(FlagStyleAfter)
+		}
+		if cmd.Flags().Changed("halign") {
+			conf.Style.HAlignment = FlagHAlignment
+		}
+
 		var ch = make(chan pool.Update)
 		go pool.Listen(player, provider, conf, ch)
 
@@ -112,10 +131,43 @@ var rootCmd = &coral.Command{
 	},
 }
 
+func parseStyleFlag(value string) config.Style {
+	var style config.Style
+
+	for _, part := range strings.Split(value, ",") {
+		switch part {
+		case "bold":
+			style.Bold = true
+		case "italic":
+			style.Italic = true
+		case "underline":
+			style.Undeline = true
+		case "strikethrough":
+			style.Strikethrough = true
+		case "blink":
+			style.Blink = true
+		case "faint":
+			style.Faint = true
+		default:
+			if style.Foreground == "" {
+				style.Foreground = part
+			} else if style.Background == "" {
+				style.Background = part
+			}
+		}
+	}
+	return style
+}
+
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&FlagCookie, "cookie", "c", "", "your cookie")
 	rootCmd.PersistentFlags().StringVarP(&FlagPlayer, "player", "p", "spotify", "what player to use")
 	rootCmd.PersistentFlags().StringVar(&FlagConfig, "config", config.Path, "path to config file")
+
+	rootCmd.Flags().StringVar(&FlagStyleBefore, "before", "bold", "style of the lines before the current one")
+	rootCmd.Flags().StringVar(&FlagStyleCurrent, "current", "bold", "style of the current line")
+	rootCmd.Flags().StringVar(&FlagStyleAfter, "after", "faint", "style of the lines after the current one")
+	rootCmd.Flags().StringVar(&FlagHAlignment, "halign", "center", "initial horizontal alignment (left/center/right)")
 
 	rootCmd.AddCommand(pipeCmd)
 }
