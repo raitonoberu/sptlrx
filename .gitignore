@@ -15,3 +15,9 @@
 # vendor/
 
 dist/
+
+# Built executable
+sptlrx
+
+# IDE files
+.vscode/

@@ -59,6 +59,10 @@ type Config struct {
 	Mopidy struct {
 		Address string `default:"127.0.0.1:6680" yaml:"address"`
 	} `yaml:"mopidy"`
+
+	Mpris struct {
+		Name string `default:"" yaml:"name"`
+	} `yaml:"mpris"`
 }
 
 func New() *Config {
@@ -193,7 +197,7 @@ func GetPlayer(conf *Config) (player.Player, error) {
 			conf.Mopidy.Address,
 		)
 	case "mpris":
-		return mpris.New()
+		return mpris.New(conf.Mpris.Name)
 	}
 	return nil, fmt.Errorf("unknown player: \"%s\"", conf.Player)
 }

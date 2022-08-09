@@ -10,7 +10,7 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
-func New() (*Client, error) {
+func New(name string) (*Client, error) {
 	if runtime.GOOS == "windows" {
 		return nil, errors.New("windows is not supported")
 	}
@@ -19,12 +19,22 @@ func New() (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{conn}, nil
+	return &Client{name, conn}, nil
 }
 
 // Client implements player.Player
 type Client struct {
+	name string
 	conn *dbus.Conn
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 func (p *Client) getPlayer() (*mpris.Player, error) {
@@ -36,7 +46,14 @@ func (p *Client) getPlayer() (*mpris.Player, error) {
 		return nil, nil
 	}
 
-	return mpris.New(p.conn, names[0]), nil
+	if len(p.name) == 0 {
+		return mpris.New(p.conn, names[0]), nil
+	}
+
+	if !stringInSlice(p.name, names) {
+		return nil, err
+	}
+	return mpris.New(p.conn, p.name), nil
 }
 
 func (p *Client) State() (*player.State, error) {
