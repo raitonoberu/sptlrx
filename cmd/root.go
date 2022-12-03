@@ -170,6 +170,7 @@ func init() {
 	rootCmd.Flags().StringVar(&FlagHAlignment, "halign", "center", "initial horizontal alignment (left/center/right)")
 
 	rootCmd.AddCommand(pipeCmd)
+	rootCmd.AddCommand(exportCmd)
 }
 
 func Execute() {
