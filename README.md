@@ -147,6 +147,8 @@ If you want to use Spotify as your player or lyrics source, you need to specify 
 
 You can also set the `SPOTIFY_COOKIE` enviroment variable or pass the `--cookie` flag.
 
+**TREAT YOUR COOKIE LIKE A PASSWORD AND NEVER COMMIT IT**
+
 ### MPD
 
 ```yaml
