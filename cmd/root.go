@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/muesli/coral"
+	"github.com/spf13/cobra"
 )
 
 const banner = `
@@ -42,14 +42,14 @@ var (
 	FlagHAlignment   string
 )
 
-var rootCmd = &coral.Command{
+var rootCmd = &cobra.Command{
 	Use:          "sptlrx",
 	Short:        "Time-synced lyrics in your terminal",
 	Long:         "A CLI app that shows time-synced lyrics in your terminal",
 	Version:      "v1.0.0",
 	SilenceUsage: true,
 
-	RunE: func(cmd *coral.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Flags().Changed("config") {
 			// custom config path
 			config.Path = FlagConfig

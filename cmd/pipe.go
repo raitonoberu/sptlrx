@@ -10,16 +10,16 @@ import (
 	"sptlrx/services/spotify"
 	"strings"
 
-	"github.com/muesli/coral"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/muesli/reflow/wrap"
+	"github.com/spf13/cobra"
 )
 
-var pipeCmd = &coral.Command{
+var pipeCmd = &cobra.Command{
 	Use:   "pipe",
 	Short: "Start printing the current lines to stdout",
 
-	RunE: func(cmd *coral.Command, args []string) error {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		if cmd.Flags().Changed("config") {
 			// custom config path
 			config.Path = FlagConfig
