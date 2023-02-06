@@ -34,6 +34,7 @@ func init() {
 type Config struct {
 	Cookie         string `yaml:"cookie"`
 	Player         string `default:"spotify" yaml:"player"`
+	Host           string `default:"lyricsapi.vercel.app" yaml:"host"`
 	TimerInterval  int    `default:"200" yaml:"timerInterval"`
 	UpdateInterval int    `default:"2000" yaml:"updateInterval"`
 

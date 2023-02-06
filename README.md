@@ -20,10 +20,13 @@
 **Linux**
 
 - Arch Linux ([@BachoSeven](https://github.com/BachoSeven))
+
 ```
 yay -S sptlrx-bin
 ```
+
 - NixOS ([@MoritzBoehme](https://github.com/MoritzBoehme))
+
 ```
 nix-env -iA nixos.sptlrx
 ```
@@ -33,19 +36,23 @@ or if using nixpkgs
 ```
 nix-env -iA nixpkgs.sptlrx
 ```
+
 - Other
+
 ```
-curl -sSL instl.sh/raitonoberu/sptlrx/linux | bash  
+curl -sSL instl.sh/raitonoberu/sptlrx/linux | bash
 ```
 
 **Windows**
+
 ```
-iwr instl.sh/raitonoberu/sptlrx/windows | iex  
+iwr instl.sh/raitonoberu/sptlrx/windows | iex
 ```
 
 **macOS**
+
 ```
-curl -sSL instl.sh/raitonoberu/sptlrx/macos | bash   
+curl -sSL instl.sh/raitonoberu/sptlrx/macos | bash
 ```
 
 You can also download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page or [build it yourself](./building.md).
@@ -63,6 +70,8 @@ Config file will be created at the first launch. On Linux it's located in `~/.co
 cookie: ""
 # Player that will be used. Possible values: spotify, mpd, mopidy, mpris.
 player: spotify
+# Host of lyrics API to be used in case the cookie is not provided.
+host: lyricsapi.vercel.app
 # Interval of the internal timer. Determines how often the terminal will be updated.
 timerInterval: 200
 # Interval for checking the position. Doesn't really affect the precision.
@@ -127,6 +136,7 @@ mopidy:
   # Mopidy server address with port
   address: 127.0.0.1:6680
 ```
+
 </details>
 
 ### Spotify
@@ -194,9 +204,11 @@ Run `sptlrx pipe` to start printing the current lines to stdout. This can be use
 ### Flags
 
 You can pass flags to override the style parameters defined in the config. Example:
+
 ```sh
 sptlrx --current "bold,#FFDFD3,#957DAD" --before "104,faint,italic" --after "104,faint"
 ```
+
 List of allowed styles: `bold`, `italic`, `underline`, `strikethrough`, `blink`, `faint`. The colors can be either in HEX format, or ANSI 0-255. The first color represents the foreground, the second represents the background.
 
 Run `sptlrx --help` to see all the flags.

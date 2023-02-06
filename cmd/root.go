@@ -101,7 +101,7 @@ var rootCmd = &cobra.Command{
 			}
 		} else {
 			// use hosted provider
-			provider = hosted.New()
+			provider = hosted.New(conf.Host)
 		}
 
 		if cmd.Flags().Changed("before") {

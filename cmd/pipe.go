@@ -64,7 +64,7 @@ var pipeCmd = &cobra.Command{
 			}
 		} else {
 			// use hosted provider
-			provider = hosted.New()
+			provider = hosted.New(conf.Host)
 		}
 
 		var ch = make(chan pool.Update)
