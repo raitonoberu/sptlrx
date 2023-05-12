@@ -52,6 +52,11 @@ type Config struct {
 		IgnoreErrors bool   `default:"true" yaml:"ignoreErrors"`
 	} `yaml:"pipe"`
 
+	Web struct {
+		Port      uint16 `default:"0" yaml:"port"`
+		NoBrowser bool   `default:"false" yaml:"noBrowser"`
+	} `yaml:"web"`
+
 	Mpd struct {
 		Address  string `default:"127.0.0.1:6600" yaml:"address"`
 		Password string `yaml:"password"`
