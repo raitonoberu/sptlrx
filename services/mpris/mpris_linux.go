@@ -63,7 +63,7 @@ func (c *Client) State() (*player.State, error) {
 	position, err := p.GetPosition()
 	if err != nil {
 		// unsupported player
-		return nil, err
+		return nil, nil
 	}
 	meta, err := p.GetMetadata()
 	if err != nil {
