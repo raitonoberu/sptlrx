@@ -127,7 +127,8 @@ var rootCmd = &cobra.Command{
 			},
 			tea.WithAltScreen(),
 		)
-		return p.Start()
+		_, err = p.Run()
+		return err
 	},
 }
 
