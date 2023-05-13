@@ -8,27 +8,22 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
-func New(name string) (*Client, error) {
+func New(players []string) (*Client, error) {
 	conn, err := dbus.SessionBus()
 	if err != nil {
 		return nil, err
 	}
-
-	var names []string
-	if name != "" {
-		names = strings.Split(name, ",")
-	}
-	return &Client{names, conn}, nil
+	return &Client{players, conn}, nil
 }
 
 // Client implements player.Player
 type Client struct {
-	names []string
-	conn  *dbus.Conn
+	players []string
+	conn    *dbus.Conn
 }
 
-func (p *Client) getPlayer() (*mpris.Player, error) {
-	players, err := mpris.List(p.conn)
+func (c *Client) getPlayer() (*mpris.Player, error) {
+	players, err := mpris.List(c.conn)
 	if err != nil {
 		return nil, err
 	}
@@ -36,41 +31,41 @@ func (p *Client) getPlayer() (*mpris.Player, error) {
 		return nil, nil
 	}
 
-	if len(p.names) == 0 {
-		return mpris.New(p.conn, players[0]), nil
+	if len(c.players) == 0 {
+		return mpris.New(c.conn, players[0]), nil
 	}
 
 	// iterating over configured names
-	for _, name := range p.names {
+	for _, p := range c.players {
 		for _, player := range players {
 			// trim "org.mpris.MediaPlayer2."
-			if player[23:] == name {
-				return mpris.New(p.conn, player), nil
+			if player[23:] == p {
+				return mpris.New(c.conn, player), nil
 			}
 		}
 	}
 	return nil, nil
 }
 
-func (p *Client) State() (*player.State, error) {
-	pl, err := p.getPlayer()
+func (c *Client) State() (*player.State, error) {
+	p, err := c.getPlayer()
 	if err != nil {
 		return nil, err
 	}
-	if pl == nil {
+	if p == nil {
 		return nil, nil
 	}
 
-	status, err := pl.GetPlaybackStatus()
+	status, err := p.GetPlaybackStatus()
 	if err != nil {
 		return nil, err
 	}
-	position, err := pl.GetPosition()
+	position, err := p.GetPosition()
 	if err != nil {
 		// unsupported player
 		return nil, err
 	}
-	meta, err := pl.GetMetadata()
+	meta, err := p.GetMetadata()
 	if err != nil {
 		return nil, err
 	}
