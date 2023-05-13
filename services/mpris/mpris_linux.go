@@ -13,41 +13,43 @@ func New(name string) (*Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Client{name, conn}, nil
+
+	var names []string
+	if name != "" {
+		names = strings.Split(name, ",")
+	}
+	return &Client{names, conn}, nil
 }
 
 // Client implements player.Player
 type Client struct {
-	name string
-	conn *dbus.Conn
-}
-
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
+	names []string
+	conn  *dbus.Conn
 }
 
 func (p *Client) getPlayer() (*mpris.Player, error) {
-	names, err := mpris.List(p.conn)
+	players, err := mpris.List(p.conn)
 	if err != nil {
 		return nil, err
 	}
-	if len(names) == 0 {
+	if len(players) == 0 {
 		return nil, nil
 	}
 
-	if len(p.name) == 0 {
-		return mpris.New(p.conn, names[0]), nil
+	if len(p.names) == 0 {
+		return mpris.New(p.conn, players[0]), nil
 	}
 
-	if !stringInSlice(p.name, names) {
-		return nil, nil
+	// iterating over configured names
+	for _, name := range p.names {
+		for _, player := range players {
+			// trim "org.mpris.MediaPlayer2."
+			if player[23:] == name {
+				return mpris.New(p.conn, player), nil
+			}
+		}
 	}
-	return mpris.New(p.conn, p.name), nil
+	return nil, nil
 }
 
 func (p *Client) State() (*player.State, error) {
@@ -66,7 +68,7 @@ func (p *Client) State() (*player.State, error) {
 	position, err := pl.GetPosition()
 	if err != nil {
 		// unsupported player
-		return nil, nil
+		return nil, err
 	}
 	meta, err := pl.GetMetadata()
 	if err != nil {
