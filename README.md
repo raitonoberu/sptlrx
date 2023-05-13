@@ -72,6 +72,8 @@ cookie: ""
 player: spotify
 # Host of lyrics API to be used in case the cookie is not provided.
 host: lyricsapi.vercel.app
+# Whether to ignore errors instead of showing them.
+ignoreErrors: true
 # Interval of the internal timer. Determines how often the terminal will be updated.
 timerInterval: 200
 # Interval for checking the position. Doesn't really affect the precision.
@@ -121,8 +123,6 @@ pipe:
   length: 0
   # How to handle overflowing strings. Possible values: word, none, ellipsis.
   overflow: word
-  # Whether to ignore errors instead of printing to stdout.
-  ignoreErrors: true
 
 ### MPD settings ###
 mpd:
