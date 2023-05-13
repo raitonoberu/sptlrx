@@ -110,7 +110,7 @@ func (m *Model) View() string {
 	if m.w < 1 || m.h < 1 {
 		return ""
 	}
-	if m.err != nil {
+	if m.err != nil && !m.Config.IgnoreErrors {
 		return gloss.PlaceVertical(
 			m.h, gloss.Center,
 			m.styleCurrent.

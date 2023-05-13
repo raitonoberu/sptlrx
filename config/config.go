@@ -35,6 +35,7 @@ type Config struct {
 	Cookie         string `yaml:"cookie"`
 	Player         string `default:"spotify" yaml:"player"`
 	Host           string `default:"lyricsapi.vercel.app" yaml:"host"`
+	IgnoreErrors   bool   `default:"true" yaml:"ignoreErrors"`
 	TimerInterval  int    `default:"200" yaml:"timerInterval"`
 	UpdateInterval int    `default:"2000" yaml:"updateInterval"`
 
@@ -47,9 +48,8 @@ type Config struct {
 	} `yaml:"style"`
 
 	Pipe struct {
-		Length       int    `yaml:"length"`
-		Overflow     string `default:"word" yaml:"overflow"`
-		IgnoreErrors bool   `default:"true" yaml:"ignoreErrors"`
+		Length   int    `yaml:"length"`
+		Overflow string `default:"word" yaml:"overflow"`
 	} `yaml:"pipe"`
 
 	Mpd struct {
