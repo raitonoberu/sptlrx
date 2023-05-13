@@ -73,7 +73,7 @@ var pipeCmd = &cobra.Command{
 		for update := range ch {
 			if update.Err != nil {
 				if !conf.Pipe.IgnoreErrors {
-					fmt.Println(err.Error())
+					fmt.Println(update.Err.Error())
 				}
 				continue
 			}
