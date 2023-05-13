@@ -29,6 +29,7 @@ func Listen(
 	var id string
 	var playing bool
 	var position int
+	var inError bool
 
 	var lines []lyrics.Line
 	var index int
@@ -71,7 +72,8 @@ func Listen(
 				changed = true
 				id = update.state.ID
 				newLines, err := provider.Lyrics(id, update.state.Query)
-				if err != nil {
+				inError = err != nil
+				if inError {
 					ch <- Update{
 						Err: err,
 					}
@@ -105,7 +107,7 @@ func Listen(
 			}
 		}
 
-		if changed {
+		if changed && !inError {
 			ch <- Update{
 				Lines:   lines,
 				Index:   index,
