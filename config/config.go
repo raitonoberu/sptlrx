@@ -194,9 +194,7 @@ func GetPlayer(conf *Config) (player.Player, error) {
 	case "mpd":
 		return mpd.New(conf.Mpd.Address, conf.Mpd.Password)
 	case "mopidy":
-		return mopidy.New(
-			conf.Mopidy.Address,
-		)
+		return mopidy.New(conf.Mopidy.Address)
 	case "mpris":
 		return mpris.New(conf.Mpris.Players)
 	}
