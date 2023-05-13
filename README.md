@@ -135,6 +135,11 @@ mpd:
 mopidy:
   # Mopidy server address with port
   address: 127.0.0.1:6680
+
+### MPRIS settings ###
+mpris:
+  # Whitelist of MPRIS players. First available is used if empty.
+  players: []
 ```
 
 </details>
@@ -187,9 +192,11 @@ Mopidy server will be used as a player.
 ```yaml
 # config.yaml
 player: mpris
+mpris:
+  players: []
 ```
 
-Linux only. System player that supports MPRIS protocol will be used.
+Linux only. System player that supports MPRIS protocol will be used. You can also specify a whitelist of players to use, example: `players: [rhythmbox, spotifyd]`. Run `playerctl -l` to get the names.
 
 ## Information
 
