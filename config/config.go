@@ -62,7 +62,7 @@ type Config struct {
 	} `yaml:"mopidy"`
 
 	Mpris struct {
-		Name string `default:"" yaml:"name"`
+		Players []string `default:"[]" yaml:"players"`
 	} `yaml:"mpris"`
 }
 
@@ -198,7 +198,7 @@ func GetPlayer(conf *Config) (player.Player, error) {
 			conf.Mopidy.Address,
 		)
 	case "mpris":
-		return mpris.New(conf.Mpris.Name)
+		return mpris.New(conf.Mpris.Players)
 	}
 	return nil, fmt.Errorf("unknown player: \"%s\"", conf.Player)
 }
