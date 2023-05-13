@@ -45,7 +45,7 @@ func (p *Client) getPlayer() (*mpris.Player, error) {
 	}
 
 	if !stringInSlice(p.name, names) {
-		return nil, err
+		return nil, nil
 	}
 	return mpris.New(p.conn, p.name), nil
 }
@@ -65,7 +65,8 @@ func (p *Client) State() (*player.State, error) {
 	}
 	position, err := pl.GetPosition()
 	if err != nil {
-		return nil, err
+		// unsupported player
+		return nil, nil
 	}
 	meta, err := pl.GetMetadata()
 	if err != nil {
