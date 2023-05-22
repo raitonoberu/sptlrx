@@ -67,6 +67,10 @@ var pipeCmd = &cobra.Command{
 			provider = hosted.New(conf.Host)
 		}
 
+		if FlagVerbose {
+			conf.IgnoreErrors = false
+		}
+
 		var ch = make(chan pool.Update)
 		go pool.Listen(player, provider, conf, ch)
 
