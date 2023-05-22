@@ -5,7 +5,7 @@ import (
 	"sptlrx/player"
 )
 
-func New(name string) (*Client, error) {
+func New(players []string) (*Client, error) {
 	return nil, errors.New("darwin is not supported")
 }
 
