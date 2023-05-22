@@ -7,12 +7,11 @@ import (
 	"github.com/fhs/gompd/mpd"
 )
 
-func New(address, password string) (*Client, error) {
-	c := &Client{
+func New(address, password string) *Client {
+	return &Client{
 		address:  address,
 		password: password,
 	}
-	return c, c.connect()
 }
 
 // Client implements player.Player

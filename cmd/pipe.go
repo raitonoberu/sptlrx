@@ -56,11 +56,7 @@ var pipeCmd = &cobra.Command{
 				provider = spt
 			} else {
 				// create new client
-				client, err := spotify.New(conf.Cookie)
-				if err != nil {
-					return err
-				}
-				provider = client
+				provider, _ = spotify.New(conf.Cookie)
 			}
 		} else {
 			// use hosted provider

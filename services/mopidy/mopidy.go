@@ -8,11 +8,8 @@ import (
 	"sptlrx/player"
 )
 
-func New(address string) (*Client, error) {
-	c := &Client{
-		address: address,
-	}
-	return c, nil
+func New(address string) *Client {
+	return &Client{address: address}
 }
 
 // Client implements player.Player

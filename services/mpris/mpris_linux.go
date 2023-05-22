@@ -9,21 +9,21 @@ import (
 )
 
 func New(players []string) (*Client, error) {
-	conn, err := dbus.SessionBus()
-	if err != nil {
-		return nil, err
-	}
-	return &Client{players, conn}, nil
+	return &Client{players}, nil
 }
 
 // Client implements player.Player
 type Client struct {
 	players []string
-	conn    *dbus.Conn
 }
 
 func (c *Client) getPlayer() (*mpris.Player, error) {
-	players, err := mpris.List(c.conn)
+	conn, err := dbus.SessionBus()
+	if err != nil {
+		return nil, err
+	}
+
+	players, err := mpris.List(conn)
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (c *Client) getPlayer() (*mpris.Player, error) {
 	}
 
 	if len(c.players) == 0 {
-		return mpris.New(c.conn, players[0]), nil
+		return mpris.New(conn, players[0]), nil
 	}
 
 	// iterating over configured names
@@ -40,7 +40,7 @@ func (c *Client) getPlayer() (*mpris.Player, error) {
 		for _, player := range players {
 			// trim "org.mpris.MediaPlayer2."
 			if player[23:] == p {
-				return mpris.New(c.conn, player), nil
+				return mpris.New(conn, player), nil
 			}
 		}
 	}
