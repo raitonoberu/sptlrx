@@ -1,7 +1,7 @@
 <div align="center">
 
 <h1><a href="https://github.com/raitonoberu/sptlrx">sptlrx</a></h1>
-<h4>Timesynced lyrics in your terminal</h4>
+<h4>Synchronized lyrics in your terminal</h4>
 
 ![Crystal Castles - Not In Love](./demo.svg "Crystal Castles - Not In Love")
 

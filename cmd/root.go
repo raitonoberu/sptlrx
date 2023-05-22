@@ -44,8 +44,8 @@ var (
 
 var rootCmd = &cobra.Command{
 	Use:          "sptlrx",
-	Short:        "Time-synced lyrics in your terminal",
-	Long:         "A CLI app that shows time-synced lyrics in your terminal",
+	Short:        "Synchronized lyrics in your terminal",
+	Long:         "A CLI app that shows time-synchronized lyrics in your terminal",
 	Version:      "v1.0.0",
 	SilenceUsage: true,
 
