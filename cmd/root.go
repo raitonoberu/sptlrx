@@ -40,6 +40,8 @@ var (
 	FlagStyleCurrent string
 	FlagStyleAfter   string
 	FlagHAlignment   string
+
+	FlagVerbose bool
 )
 
 var rootCmd = &cobra.Command{
@@ -117,6 +119,10 @@ var rootCmd = &cobra.Command{
 			conf.Style.HAlignment = FlagHAlignment
 		}
 
+		if FlagVerbose {
+			conf.IgnoreErrors = false
+		}
+
 		var ch = make(chan pool.Update)
 		go pool.Listen(player, provider, conf, ch)
 
@@ -169,6 +175,8 @@ func init() {
 	rootCmd.Flags().StringVar(&FlagStyleCurrent, "current", "bold", "style of the current line")
 	rootCmd.Flags().StringVar(&FlagStyleAfter, "after", "faint", "style of the lines after the current one")
 	rootCmd.Flags().StringVar(&FlagHAlignment, "halign", "center", "initial horizontal alignment (left/center/right)")
+
+	rootCmd.PersistentFlags().BoolVarP(&FlagVerbose, "verbose", "v", false, "force print errors")
 
 	rootCmd.AddCommand(pipeCmd)
 	rootCmd.AddCommand(webCmd)
