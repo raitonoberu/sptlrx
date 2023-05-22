@@ -192,14 +192,11 @@ func validateColor(color string) bool {
 func GetPlayer(conf *Config) (player.Player, error) {
 	switch conf.Player {
 	case "spotify":
-		if conf.Cookie == "" {
-			return nil, spotify.ErrInvalidCookie
-		}
 		return spotify.New(conf.Cookie)
 	case "mpd":
-		return mpd.New(conf.Mpd.Address, conf.Mpd.Password)
+		return mpd.New(conf.Mpd.Address, conf.Mpd.Password), nil
 	case "mopidy":
-		return mopidy.New(conf.Mopidy.Address)
+		return mopidy.New(conf.Mopidy.Address), nil
 	case "mpris":
 		return mpris.New(conf.Mpris.Players)
 	}

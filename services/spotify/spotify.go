@@ -22,10 +22,10 @@ const stateUrl = "https://api.spotify.com/v1/me/player/currently-playing"
 const searchUrl = "https://api.spotify.com/v1/search?"
 
 func New(cookie string) (*Client, error) {
-	c := &Client{
-		cookie: cookie,
+	if cookie == "" {
+		return nil, ErrInvalidCookie
 	}
-	return c, c.checkToken()
+	return &Client{cookie: cookie}, nil
 }
 
 // Client implements both player.Player and lyrics.Provider
