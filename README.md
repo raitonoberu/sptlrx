@@ -3,7 +3,9 @@
 <h1><a href="https://github.com/raitonoberu/sptlrx">sptlrx</a></h1>
 <h4>Synchronized lyrics in your terminal</h4>
 
-![Crystal Castles - Not In Love](./demo.svg "Crystal Castles - Not In Love")
+<a href="https://www.youtube.com/watch?v=qR2QIJdtgiU">
+  <img title="Crystal Castles — Kerosene" src="./demo.gif" width="450"/>
+</a>
 
 </div>
 
