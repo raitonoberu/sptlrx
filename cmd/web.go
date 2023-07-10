@@ -59,15 +59,15 @@ var webCmd = &cobra.Command{
 				provider = spt
 			} else {
 				// create new client
-				client, err := spotify.New(conf.Cookie)
-				if err != nil {
-					return err
-				}
-				provider = client
+				provider, _ = spotify.New(conf.Cookie)
 			}
 		} else {
 			// use hosted provider
 			provider = hosted.New(conf.Host)
+		}
+
+		if FlagVerbose {
+			conf.IgnoreErrors = false
 		}
 
 		if cmd.Flags().Changed("port") {

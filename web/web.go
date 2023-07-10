@@ -158,7 +158,7 @@ func (s *Server) notifyAll(m message) {
 	for conn := range s.wsPool {
 		// TODO: timeout?
 		err := wsjson.Write(context.Background(), conn, m)
-		if err != nil {
+		if err != nil && !s.Config.IgnoreErrors {
 			fmt.Println(err)
 		}
 	}
