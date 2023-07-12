@@ -26,7 +26,8 @@ type message struct {
 	Lines   []lyrics.Line `json:"lines,omitempty"`
 	Index   *int          `json:"index,omitempty"`
 	Playing *bool         `json:"playing,omitempty"`
-	Err     string        `json:"err,omitempty"`
+	// TODO: rename to Error
+	Err string `json:"err,omitempty"`
 }
 
 type Server struct {
@@ -44,6 +45,7 @@ type Server struct {
 
 func (s *Server) Start() error {
 	e := echo.New()
+	// TODO: log echo errors
 
 	staticFS, _ := fs.Sub(frontendFS, "frontend/dist")
 	staticHandler := http.FileServer(http.FS(staticFS))
@@ -74,7 +76,11 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) wsHandler(c echo.Context) error {
-	conn, err := websocket.Accept(c.Response().Writer, c.Request(), nil)
+	conn, err := websocket.Accept(c.Response(), c.Request(),
+		// TODO: add "insecure" flag instead
+		&websocket.AcceptOptions{
+			InsecureSkipVerify: true,
+		})
 	if err != nil {
 		return err
 	}
