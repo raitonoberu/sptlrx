@@ -1,0 +1,17 @@
+.Lyrics {
+  padding: 10px;
+  background-color: #191724;
+}
+
+.Line {
+  text-align: center;
+  font-family: "Open Sans";
+  font-size: 20pt;
+  font-weight: normal;
+  padding: 5px, 5px;
+  color: #e0def4;
+}
+
+.After {
+  color: #6e6a86;
+}
