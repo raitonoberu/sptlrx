@@ -13,6 +13,7 @@ import (
 	"sptlrx/lyrics"
 	"sptlrx/pool"
 	"sync"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"nhooyr.io/websocket"
@@ -156,11 +157,12 @@ func (s *Server) notifyAll(m message) {
 		go func(conn *websocket.Conn, mu *sync.Mutex) {
 			mu.Lock()
 
-			// TODO: timeout?
-			err := wsjson.Write(context.Background(), conn, m)
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+			err := wsjson.Write(ctx, conn, m)
 			if err != nil && !s.Config.IgnoreErrors {
 				fmt.Println(err)
 			}
+			cancel()
 
 			mu.Unlock()
 			wg.Done()
