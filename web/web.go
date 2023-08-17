@@ -45,7 +45,6 @@ type Server struct {
 
 func (s *Server) Start() error {
 	e := echo.New()
-	// TODO: log echo errors
 
 	staticFS, _ := fs.Sub(frontendFS, "frontend/dist")
 	staticHandler := http.FileServer(http.FS(staticFS))
@@ -77,7 +76,6 @@ func (s *Server) Start() error {
 
 func (s *Server) wsHandler(c echo.Context) error {
 	conn, err := websocket.Accept(c.Response(), c.Request(),
-		// TODO: add "insecure" flag instead
 		&websocket.AcceptOptions{
 			InsecureSkipVerify: true,
 		})
@@ -150,7 +148,7 @@ func (s *Server) updateLoop() {
 
 func (s *Server) notifyAll(m message) {
 	s.wsMutex.RLock()
-	wg := &sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 
 	for conn, mu := range s.wsPool {
 		wg.Add(1)
