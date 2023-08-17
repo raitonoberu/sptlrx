@@ -16,7 +16,7 @@ function Lyrics() {
       if (data.lines !== undefined) setLines(data.lines);
       if (data.index !== undefined) setIndex(data.index);
       if (data.playing !== undefined) setPlaying(data.playing);
-      if (data.err !== undefined) setError(data.err);
+      if (data.error !== undefined) setError(data.error);
     });
   };
 

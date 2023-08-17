@@ -26,8 +26,7 @@ type message struct {
 	Lines   []lyrics.Line `json:"lines,omitempty"`
 	Index   *int          `json:"index,omitempty"`
 	Playing *bool         `json:"playing,omitempty"`
-	// TODO: rename to Error
-	Err string `json:"err,omitempty"`
+	Error   string        `json:"error,omitempty"`
 }
 
 type Server struct {
@@ -114,7 +113,7 @@ func (s *Server) sendState(conn *websocket.Conn) error {
 		Playing: &s.playing,
 	}
 	if s.err != nil {
-		msg.Err = s.err.Error()
+		msg.Error = s.err.Error()
 	}
 	return wsjson.Write(context.Background(), conn, msg)
 }
@@ -149,7 +148,7 @@ func (s *Server) updateLoop() {
 		if s.err != update.Err {
 			s.err = update.Err
 			if update.Err != nil {
-				msg.Err = update.Err.Error()
+				msg.Error = update.Err.Error()
 			}
 		}
 
