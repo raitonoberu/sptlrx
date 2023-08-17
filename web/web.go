@@ -34,7 +34,7 @@ type Server struct {
 	Channel chan pool.Update
 
 	wsMutex sync.RWMutex
-	wsPool  map[*websocket.Conn]struct{}
+	wsPool  map[*websocket.Conn]*sync.Mutex
 
 	lines   []lyrics.Line
 	index   int
@@ -65,7 +65,7 @@ func (s *Server) Start() error {
 		openInBrowser(fmt.Sprintf("http://localhost:%d", port))
 	}
 
-	s.wsPool = make(map[*websocket.Conn]struct{})
+	s.wsPool = make(map[*websocket.Conn]*sync.Mutex)
 
 	go s.updateLoop()
 
@@ -85,7 +85,7 @@ func (s *Server) wsHandler(c echo.Context) error {
 	}
 
 	s.wsMutex.Lock()
-	s.wsPool[conn] = struct{}{}
+	s.wsPool[conn] = &sync.Mutex{}
 
 	defer func(conn *websocket.Conn) {
 		s.wsMutex.Lock()
@@ -98,7 +98,7 @@ func (s *Server) wsHandler(c echo.Context) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	s.sendState(conn)
+	s.sendInitialState(conn)
 
 	conn.Reader(ctx)
 	conn.Close(websocket.StatusPolicyViolation, "unexpected data message")
@@ -106,7 +106,7 @@ func (s *Server) wsHandler(c echo.Context) error {
 	return nil
 }
 
-func (s *Server) sendState(conn *websocket.Conn) error {
+func (s *Server) sendInitialState(conn *websocket.Conn) error {
 	msg := message{
 		Lines:   s.lines,
 		Index:   &s.index,
@@ -126,24 +126,15 @@ func (s *Server) updateLoop() {
 		if lyricsChanged(s.lines, update.Lines) {
 			s.lines = update.Lines
 			msg.Lines = update.Lines
-
-			if len(update.Lines) == 0 {
-				// track is over, hiding lyrics
-				index := -1
-				msg.Index = &index
-			}
 		}
-
 		if s.index != update.Index {
 			s.index = update.Index
 			msg.Index = &update.Index
 		}
-
 		if s.playing != update.Playing {
 			s.playing = update.Playing
 			msg.Playing = &update.Playing
 		}
-
 		// TODO: does this work?
 		if s.err != update.Err {
 			s.err = update.Err
@@ -152,21 +143,32 @@ func (s *Server) updateLoop() {
 			}
 		}
 
-		s.notifyAll(msg)
+		go s.notifyAll(msg)
 	}
 }
 
 func (s *Server) notifyAll(m message) {
 	s.wsMutex.RLock()
-	defer s.wsMutex.RUnlock()
+	wg := &sync.WaitGroup{}
 
-	for conn := range s.wsPool {
-		// TODO: timeout?
-		err := wsjson.Write(context.Background(), conn, m)
-		if err != nil && !s.Config.IgnoreErrors {
-			fmt.Println(err)
-		}
+	for conn, mu := range s.wsPool {
+		wg.Add(1)
+		go func(conn *websocket.Conn, mu *sync.Mutex) {
+			mu.Lock()
+
+			// TODO: timeout?
+			err := wsjson.Write(context.Background(), conn, m)
+			if err != nil && !s.Config.IgnoreErrors {
+				fmt.Println(err)
+			}
+
+			mu.Unlock()
+			wg.Done()
+		}(conn, mu)
 	}
+
+	wg.Wait()
+	s.wsMutex.RUnlock()
 }
 
 func openInBrowser(url string) error {
