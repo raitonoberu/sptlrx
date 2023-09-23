@@ -11,7 +11,7 @@
 
 ## Features
 
-- Compatible with Spotify, MPD, Mopidy and MPRIS.
+- Compatible with Spotify, MPD, Mopidy, MPRIS and browsers.
 - Works well with long lines & Unicode characters.
 - Easy to customize.
 - Allows piping to stdout.
@@ -142,6 +142,11 @@ mopidy:
 mpris:
   # Whitelist of MPRIS players. First available is used if empty.
   players: []
+
+### Browser extension settings ###
+browser:
+  # Port on which the server will be started.
+  port: 8974
 ```
 
 </details>
@@ -199,6 +204,17 @@ mpris:
 ```
 
 Linux only. System player that supports MPRIS protocol will be used. You can also specify a whitelist of players to use, example: `players: [rhythmbox, spotifyd]`. Run `playerctl -l` to get the names.
+
+### Browser
+
+```yaml
+# config.yaml
+player: browser
+browser:
+  port: 8974
+```
+
+You need to install a [browser extension](https://wnp.keifufu.dev/extension/getting-started). If you don't change the default port, no futher configuration is required. Otherwise, create a custom adapter in the extension settings. **You can only run one instance on one port.**
 
 ## Information
 
