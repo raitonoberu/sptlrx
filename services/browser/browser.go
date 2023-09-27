@@ -114,7 +114,7 @@ func (c *Client) processMessage(msg string) {
 	case "POSITION_SECONDS":
 		pos, _ := strconv.Atoi(data)
 		c.stateMu.Lock()
-		c.position = pos
+		c.position = pos * 1000
 		c.updateTime = time.Now()
 		c.stateMu.Unlock()
 	}
@@ -147,11 +147,15 @@ func (c *Client) State() (*player.State, error) {
 	} else {
 		query = c.title
 	}
+
+	position := c.position
+	if c.state != paused {
+		position += int(time.Since(c.updateTime).Milliseconds())
+	}
 	return &player.State{
-		ID:    query,
-		Query: query,
-		Position: c.position*1000 +
-			int(time.Since(c.updateTime).Milliseconds()),
-		Playing: c.state == playing,
+		ID:       query,
+		Query:    query,
+		Position: position,
+		Playing:  c.state == playing,
 	}, nil
 }
