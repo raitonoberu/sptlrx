@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"sptlrx/player"
+	"sptlrx/services/browser"
 	"sptlrx/services/mopidy"
 	"sptlrx/services/mpd"
 	"sptlrx/services/mpris"
@@ -64,6 +65,10 @@ type Config struct {
 	Mpris struct {
 		Players []string `default:"[]" yaml:"players"`
 	} `yaml:"mpris"`
+
+	Browser struct {
+		Port int `default:"8974" yaml:"port"`
+	} `yaml:"browser"`
 }
 
 func New() *Config {
@@ -194,6 +199,8 @@ func GetPlayer(conf *Config) (player.Player, error) {
 		return mopidy.New(conf.Mopidy.Address), nil
 	case "mpris":
 		return mpris.New(conf.Mpris.Players)
+	case "browser":
+		return browser.New(conf.Browser.Port)
 	}
 	return nil, fmt.Errorf("unknown player: \"%s\"", conf.Player)
 }
