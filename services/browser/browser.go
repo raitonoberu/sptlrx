@@ -29,7 +29,7 @@ func New(port int) (*Client, error) {
 	return c, c.start(port)
 }
 
-// Client implements player.Players
+// Client implements player.Player
 type Client struct {
 	state    state
 	position int
