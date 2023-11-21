@@ -7,6 +7,7 @@ import (
 	"sptlrx/lyrics"
 	"sptlrx/pool"
 	"sptlrx/services/hosted"
+	"sptlrx/services/local"
 	"sptlrx/services/spotify"
 	"strings"
 
@@ -57,6 +58,12 @@ var pipeCmd = &cobra.Command{
 			} else {
 				// create new client
 				provider, _ = spotify.New(conf.Cookie)
+			}
+		} else if conf.Local.Folder != "" {
+			// use local provider
+			provider, err = local.New(conf.Local.Folder)
+			if err != nil {
+				return err
 			}
 		} else {
 			// use hosted provider

@@ -69,6 +69,10 @@ type Config struct {
 	Browser struct {
 		Port int `default:"8974" yaml:"port"`
 	} `yaml:"browser"`
+
+	Local struct {
+		Folder string `yaml:"folder"`
+	} `yaml:"local"`
 }
 
 func New() *Config {
