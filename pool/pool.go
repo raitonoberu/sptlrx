@@ -143,28 +143,20 @@ func getIndex(position, curIndex int, lines []lyrics.Line) int {
 	}
 
 	if position >= lines[curIndex].Time {
-		if curIndex == len(lines)-1 {
-			return curIndex
-		}
-		if position < lines[curIndex+1].Time {
-			return curIndex
-		} else {
-			// search after
-			for i, line := range lines[curIndex:] {
-				if position < line.Time {
-					return curIndex + i - 1
-				}
-			}
-		}
-	}
-	// search before
-	for i, line := range lines {
-		if position < line.Time {
-			if i != 0 {
+		// search after
+		for i := curIndex + 1; i < len(lines); i++ {
+			if position < lines[i].Time {
 				return i - 1
 			}
-			return curIndex
+		}
+		return len(lines) - 1
+	}
+
+	// search before
+	for i := curIndex; i > 0; i-- {
+		if position > lines[i].Time {
+			return i
 		}
 	}
-	return len(lines) - 1
+	return 0
 }
