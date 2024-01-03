@@ -1,6 +1,7 @@
 package mpris
 
 import (
+	"path"
 	"sptlrx/player"
 	"strings"
 
@@ -38,8 +39,12 @@ func (c *Client) getPlayer() (*mpris.Player, error) {
 	// iterating over configured names
 	for _, p := range c.players {
 		for _, player := range players {
-			// trim "org.mpris.MediaPlayer2."
-			if player[23:] == p {
+			// support pattern matching
+			match, err := path.Match("org.mpris.MediaPlayer2."+p, player)
+			if err != nil {
+				return nil, err
+			}
+			if match {
 				return mpris.New(conn, player), nil
 			}
 		}
