@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"sptlrx/player"
@@ -84,7 +84,7 @@ func Load() (*Config, error) {
 			// workaround for compatibility with old versions
 			cookiePath := path.Join(Directory, "cookie.txt")
 			if cookieFile, err := os.Open(cookiePath); err == nil {
-				b, err := ioutil.ReadAll(cookieFile)
+				b, err := io.ReadAll(cookieFile)
 				cookieFile.Close()
 
 				os.Remove(cookiePath)
