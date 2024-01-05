@@ -72,6 +72,5 @@ func printUpdate(update pool.Update, conf *config.Config) {
 		}
 		s = wrap.String(lines[0], conf.Pipe.Length-3)
 		fmt.Println(strings.Split(s, "\n")[0] + "...")
-
 	}
 }
