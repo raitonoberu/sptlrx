@@ -88,7 +88,7 @@ type requestBody struct {
 }
 
 type currentResponse struct {
-	Result *struct {
+	Result struct {
 		URI     string `json:"uri"`
 		Name    string `json:"name"`
 		Artists []struct {
