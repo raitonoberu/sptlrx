@@ -11,6 +11,7 @@ require (
 	github.com/godbus/dbus/v5 v5.1.1-0.20230522191255-76236955d466
 	github.com/muesli/reflow v0.3.0
 	github.com/spf13/cobra v1.8.0
+	gopkg.in/yaml.v2 v2.4.0
 	nhooyr.io/websocket v1.8.10
 )
 
@@ -31,5 +32,4 @@ require (
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/term v0.16.0
 	golang.org/x/text v0.14.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0
 )
