@@ -8,7 +8,7 @@ require (
 	github.com/charmbracelet/lipgloss v0.9.1
 	github.com/creasty/defaults v1.7.0
 	github.com/fhs/gompd v1.0.1
-	github.com/godbus/dbus/v5 v5.1.0
+	github.com/godbus/dbus/v5 v5.1.1-0.20230522191255-76236955d466
 	github.com/muesli/reflow v0.3.0
 	github.com/spf13/cobra v1.8.0
 	nhooyr.io/websocket v1.8.10
