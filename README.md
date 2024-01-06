@@ -128,14 +128,14 @@ pipe:
 
 ### MPD settings ###
 mpd:
-  # MPD server address with port
+  # MPD server address with port.
   address: 127.0.0.1:6600
-  # MPD server password (if any)
+  # MPD server password (if any).
   password: ""
 
 ### Mopidy settings ###
 mopidy:
-  # Mopidy server address with port
+  # Mopidy server address with port.
   address: 127.0.0.1:6680
 
 ### MPRIS settings ###
@@ -147,6 +147,11 @@ mpris:
 browser:
   # Port on which the server will be started.
   port: 8974
+
+### Local lyrics source ###
+local:
+  # Folder for scanning .lrc files. Example: "~/Music".
+  folder: ""
 ```
 
 </details>
@@ -216,11 +221,21 @@ browser:
 
 You need to install a [browser extension](https://wnp.keifufu.dev/extension/getting-started). If you don't change the default port, no futher configuration is required. Otherwise, create a custom adapter in the extension settings. **You can only run one instance on one port.**
 
+### Local
+
+```yaml
+# config.yaml
+local:
+  folder: ""
+```
+
+If you want to use your local collection of `.lrc` files to display lyrics, specify the folder to scan. The application will use files with the most similar name. All other lyrics sources will be disabled.
+
 ## Information
 
 ### Source
 
-If you specify your Spotify cookie, the lyrics will be fetched using your account. Otherwise, the API [hosted by me](https://github.com/raitonoberu/lyricsapi) will be used.
+If you specify your Spotify cookie, the lyrics will be fetched using your account. Otherwise, the API [hosted by me](https://github.com/raitonoberu/lyricsapi) will be used. It is also possible to host your own API or use local `.lrc` files.
 
 ### Piping
 
