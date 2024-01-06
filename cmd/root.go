@@ -140,9 +140,9 @@ func loadPlayer(conf *config.Config) (player.Player, error) {
 }
 
 func loadProvider(conf *config.Config, player player.Player) (lyrics.Provider, error) {
-  if conf.Local.Folder != "" {
-    return local.New(conf.Local.Folder)
-  }
+	if conf.Local.Folder != "" {
+		return local.New(conf.Local.Folder)
+	}
 	if conf.Cookie == "" {
 		return hosted.New(conf.Host), nil
 	}
