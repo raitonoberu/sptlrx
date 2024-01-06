@@ -80,8 +80,12 @@ func (c *Client) findFile(query string) *file {
 }
 
 func createIndex(folder string) ([]*file, error) {
-	index := []*file{}
+	if strings.HasPrefix(folder, "~/") {
+		dirname, _ := os.UserHomeDir()
+		folder = filepath.Join(dirname, folder[2:])
+	}
 
+	index := []*file{}
 	return index, filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
 		if d == nil {
 			return fmt.Errorf("invalid path: %s", path)
