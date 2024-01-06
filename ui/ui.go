@@ -13,23 +13,17 @@ import (
 	"golang.org/x/term"
 )
 
-type updateMsg pool.Update
-
 type Model struct {
 	Config  *config.Config
 	Channel chan pool.Update
+
+	state pool.Update
+	w, h  int
 
 	styleBefore  gloss.Style
 	styleCurrent gloss.Style
 	styleAfter   gloss.Style
 	hAlignment   gloss.Position
-
-	w, h int
-
-	lines   []lyrics.Line
-	index   int
-	playing bool
-	err     error
 }
 
 func (m *Model) Init() tea.Cmd {
@@ -37,12 +31,13 @@ func (m *Model) Init() tea.Cmd {
 	m.styleCurrent = m.Config.Style.Current.Parse()
 	m.styleAfter = m.Config.Style.After.Parse()
 
-	m.hAlignment = 0.5
 	switch m.Config.Style.HAlignment {
 	case "left":
 		m.hAlignment = 0
 	case "right":
 		m.hAlignment = 1
+	default:
+		m.hAlignment = 0.5
 	}
 
 	return tea.Batch(waitForUpdate(m.Channel), tea.HideCursor)
@@ -56,11 +51,8 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 		// does not work on Windows!
 		m.w, m.h = msg.Width, msg.Height
 
-	case updateMsg:
-		m.lines = msg.Lines
-		m.index = msg.Index
-		m.playing = msg.Playing
-		m.err = msg.Err
+	case pool.Update:
+		m.state = msg
 
 		if runtime.GOOS == "windows" {
 			w, h, err := term.GetSize(int(os.Stdout.Fd()))
@@ -87,22 +79,23 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "up":
-			if !m.playing || !lyrics.Timesynced(m.lines) {
-				m.index -= 1
-				if m.index < 0 {
-					m.index = 0
-				}
+			if m.state.Playing && lyrics.Timesynced(m.state.Lines) {
+				break
+			}
+			m.state.Index -= 1
+			if m.state.Index < 0 {
+				m.state.Index = 0
 			}
 		case "down":
-			if !m.playing || !lyrics.Timesynced(m.lines) {
-				m.index += 1
-				if m.index >= len(m.lines) {
-					m.index = len(m.lines) - 1
-				}
+			if m.state.Playing && lyrics.Timesynced(m.state.Lines) {
+				break
+			}
+			m.state.Index += 1
+			if m.state.Index >= len(m.state.Lines) {
+				m.state.Index = len(m.state.Lines) - 1
 			}
 		}
 	}
-
 	return m, cmd
 }
 
@@ -110,24 +103,25 @@ func (m *Model) View() string {
 	if m.w < 1 || m.h < 1 {
 		return ""
 	}
-	if m.err != nil && !m.Config.IgnoreErrors {
+	if m.state.Err != nil && !m.Config.IgnoreErrors {
 		return gloss.PlaceVertical(
 			m.h, gloss.Center,
 			m.styleCurrent.
 				Align(gloss.Center).
 				Width(m.w).
-				Render(m.err.Error()),
+				Render(m.state.Err.Error()),
 		)
 	}
-	if len(m.lines) == 0 {
+	if len(m.state.Lines) == 0 {
 		return ""
 	}
 
-	cur := m.styleCurrent.
+	curLine := m.styleCurrent.
 		Width(m.w).
 		Align(m.hAlignment).
-		Render(m.lines[m.index].Words)
-	curLines := strings.Split(cur, "\n")
+		Render(m.state.Lines[m.state.Index].Words)
+	curLines := strings.Split(curLine, "\n")
+
 	curLen := len(curLines)
 	beforeLen := (m.h - curLen) / 2
 	afterLen := m.h - beforeLen - curLen
@@ -136,24 +130,24 @@ func (m *Model) View() string {
 
 	// fill lines before current
 	var filledBefore int
-	var beforeIndex = m.index - 1
+	var beforeIndex = m.state.Index - 1
 	for filledBefore < beforeLen {
 		index := beforeLen - filledBefore - 1
-		if index >= 0 && beforeIndex >= 0 {
-			line := m.styleBefore.
-				Width(m.w).
-				Align(m.hAlignment).
-				Render(m.lines[beforeIndex].Words)
-			beforeIndex -= 1
-			beforeLines := strings.Split(line, "\n")
-			for i := len(beforeLines) - 1; i >= 0; i-- {
-				lineIndex := index - i
-				if lineIndex >= 0 {
-					lines[lineIndex] = beforeLines[len(beforeLines)-1-i]
-				}
-				filledBefore += 1
+		if index < 0 || beforeIndex < 0 {
+			filledBefore += 1
+			continue
+		}
+		line := m.styleBefore.
+			Width(m.w).
+			Align(m.hAlignment).
+			Render(m.state.Lines[beforeIndex].Words)
+		beforeIndex -= 1
+		beforeLines := strings.Split(line, "\n")
+		for i := len(beforeLines) - 1; i >= 0; i-- {
+			lineIndex := index - i
+			if lineIndex >= 0 {
+				lines[lineIndex] = beforeLines[len(beforeLines)-1-i]
 			}
-		} else {
 			filledBefore += 1
 		}
 	}
@@ -169,24 +163,24 @@ func (m *Model) View() string {
 
 	// fill lines after current
 	var filledAfter int
-	var afterIndex = m.index + 1
+	var afterIndex = m.state.Index + 1
 	for filledAfter < afterLen {
 		index := beforeLen + curLen + filledAfter
-		if index < len(lines) && afterIndex < len(m.lines) {
-			line := m.styleAfter.
-				Width(m.w).
-				Align(m.hAlignment).
-				Render(m.lines[afterIndex].Words)
-			afterIndex += 1
-			afterLines := strings.Split(line, "\n")
-			for i, line := range afterLines {
-				lineIndex := index + i
-				if lineIndex < len(lines) {
-					lines[lineIndex] = line
-				}
-				filledAfter += 1
+		if index >= len(lines) || afterIndex >= len(m.state.Lines) {
+			filledAfter += 1
+			continue
+		}
+		line := m.styleAfter.
+			Width(m.w).
+			Align(m.hAlignment).
+			Render(m.state.Lines[afterIndex].Words)
+		afterIndex += 1
+		afterLines := strings.Split(line, "\n")
+		for i, line := range afterLines {
+			lineIndex := index + i
+			if lineIndex < len(lines) {
+				lines[lineIndex] = line
 			}
-		} else {
 			filledAfter += 1
 		}
 	}
@@ -196,6 +190,6 @@ func (m *Model) View() string {
 
 func waitForUpdate(ch chan pool.Update) tea.Cmd {
 	return func() tea.Msg {
-		return updateMsg(<-ch)
+		return <-ch
 	}
 }

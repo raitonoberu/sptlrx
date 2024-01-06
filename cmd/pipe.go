@@ -2,13 +2,9 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"sptlrx/config"
 	"sptlrx/lyrics"
 	"sptlrx/pool"
-	"sptlrx/services/hosted"
-	"sptlrx/services/local"
-	"sptlrx/services/spotify"
 	"strings"
 
 	"github.com/muesli/reflow/wordwrap"
@@ -21,96 +17,60 @@ var pipeCmd = &cobra.Command{
 	Short: "Start printing the current lines to stdout",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if cmd.Flags().Changed("config") {
-			// custom config path
-			config.Path = FlagConfig
-		}
-
-		conf, err := config.Load()
+		conf, err := loadConfig(cmd)
 		if err != nil {
 			return fmt.Errorf("couldn't load config: %w", err)
 		}
-
-		if conf == nil {
-			conf = config.New()
-		}
-
-		if FlagCookie != "" {
-			conf.Cookie = FlagCookie
-		} else if envCookie := os.Getenv("SPOTIFY_COOKIE"); envCookie != "" {
-			conf.Cookie = envCookie
-		}
-
-		if cmd.Flags().Changed("player") {
-			conf.Player = FlagPlayer
-		}
-
-		player, err := config.GetPlayer(conf)
+		player, err := loadPlayer(conf)
 		if err != nil {
-			return err
+			return fmt.Errorf("couldn't load player: %w", err)
+		}
+		provider, err := loadProvider(conf, player)
+		if err != nil {
+			return fmt.Errorf("couldn't load provider: %w", err)
 		}
 
-		var provider lyrics.Provider
-		if conf.Cookie != "" {
-			if spt, ok := player.(*spotify.Client); ok {
-				// use existing spotify client
-				provider = spt
-			} else {
-				// create new client
-				provider, _ = spotify.New(conf.Cookie)
-			}
-		} else if conf.Local.Folder != "" {
-			// use local provider
-			provider, err = local.New(conf.Local.Folder)
-			if err != nil {
-				return err
-			}
-		} else {
-			// use hosted provider
-			provider = hosted.New(conf.Host)
-		}
-
-		if FlagVerbose {
-			conf.IgnoreErrors = false
-		}
-
-		var ch = make(chan pool.Update)
+		ch := make(chan pool.Update)
 		go pool.Listen(player, provider, conf, ch)
 
 		for update := range ch {
-			if update.Err != nil {
-				if !conf.IgnoreErrors {
-					fmt.Println(update.Err.Error())
-				}
-				continue
-			}
-			if update.Lines == nil || !lyrics.Timesynced(update.Lines) {
-				fmt.Println("")
-				continue
-			}
-			line := update.Lines[update.Index].Words
-			if conf.Pipe.Length == 0 {
-				fmt.Println(line)
-			} else {
-				switch conf.Pipe.Overflow {
-				case "word":
-					s := wordwrap.String(line, conf.Pipe.Length)
-					fmt.Println(strings.Split(s, "\n")[0])
-				case "none":
-					s := wrap.String(line, conf.Pipe.Length)
-					fmt.Println(strings.Split(s, "\n")[0])
-				case "ellipsis":
-					s := wrap.String(line, conf.Pipe.Length)
-					lines := strings.Split(s, "\n")
-					if len(lines) == 1 {
-						fmt.Println(lines[0])
-					} else {
-						s := wrap.String(lines[0], conf.Pipe.Length-3)
-						fmt.Println(strings.Split(s, "\n")[0] + "...")
-					}
-				}
-			}
+			printUpdate(update, conf)
 		}
 		return nil
 	},
+}
+
+func printUpdate(update pool.Update, conf *config.Config) {
+	if update.Err != nil {
+		if !conf.IgnoreErrors {
+			fmt.Println(update.Err.Error())
+		}
+		return
+	}
+	if update.Lines == nil || !lyrics.Timesynced(update.Lines) {
+		fmt.Println("")
+		return
+	}
+	line := update.Lines[update.Index].Words
+	if conf.Pipe.Length == 0 {
+		fmt.Println(line)
+		return
+	}
+	switch conf.Pipe.Overflow {
+	case "none":
+		s := wrap.String(line, conf.Pipe.Length)
+		fmt.Println(strings.Split(s, "\n")[0])
+	case "word":
+		s := wordwrap.String(line, conf.Pipe.Length)
+		fmt.Println(strings.Split(s, "\n")[0])
+	case "ellipsis":
+		s := wrap.String(line, conf.Pipe.Length)
+		lines := strings.Split(s, "\n")
+		if len(lines) == 1 {
+			fmt.Println(lines[0])
+			return
+		}
+		s = wrap.String(lines[0], conf.Pipe.Length-3)
+		fmt.Println(strings.Split(s, "\n")[0] + "...")
+	}
 }

@@ -1,9 +1,7 @@
 package config
 
 import (
-	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"sptlrx/player"
@@ -84,24 +82,6 @@ func New() *Config {
 func Load() (*Config, error) {
 	file, err := os.Open(Path)
 	if err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			// workaround for compatibility with old versions
-			cookiePath := path.Join(Directory, "cookie.txt")
-			if cookieFile, err := os.Open(cookiePath); err == nil {
-				b, err := ioutil.ReadAll(cookieFile)
-				cookieFile.Close()
-
-				os.Remove(cookiePath)
-
-				if err == nil && b != nil {
-					config := New()
-					config.Cookie = string(b)
-					Save(config)
-
-					return config, nil
-				}
-			}
-		}
 		return nil, err
 	}
 	defer file.Close()

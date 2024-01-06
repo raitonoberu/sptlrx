@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Update represents the state of the lyrics.
 type Update struct {
 	Lines   []lyrics.Line
 	Index   int
@@ -15,123 +16,96 @@ type Update struct {
 	Err error
 }
 
-type stateUpdate struct {
-	state *player.State
-	err   error
-}
-
+// Listen polls for lyrics updates and writes them to the channel.
 func Listen(
 	player player.Player,
 	provider lyrics.Provider,
 	conf *config.Config,
 	ch chan Update,
 ) {
-	var id string
-	var playing bool
-	var position int
-	var inError bool
+	stateCh := make(chan playerState)
+	go listenPlayer(player, stateCh, conf.UpdateInterval)
 
-	var lines []lyrics.Line
-	var index int
-
-	var (
-		timerCh  = make(chan int, 1)
-		updateCh = make(chan stateUpdate, 1)
+	ticker := time.NewTicker(
+		time.Millisecond * time.Duration(conf.TimerInterval),
 	)
 
-	go listenTimer(timerCh, conf.TimerInterval)
-	go listenUpdate(player, updateCh, conf.UpdateInterval)
-
-	var lastUpdate = time.Now()
+	var (
+		state      playerState
+		index      int
+		lines      []lyrics.Line
+		lastUpdate time.Time
+	)
 
 	for {
-		var changed bool
+		changed := false
 
 		select {
-		case update := <-updateCh:
+		case newState := <-stateCh:
 			lastUpdate = time.Now()
 
-			if update.err != nil {
-				ch <- Update{
-					Err: update.err,
-				}
-				break
-			}
-
-			if update.state == nil {
-				if lines != nil {
-					changed = true
-					id = ""
-					lines = nil
-					playing = false
-					index = 0
-				}
-				break
-			}
-			if update.state.ID != id {
+			if newState.ID != state.ID {
 				changed = true
-				id = update.state.ID
-				newLines, err := provider.Lyrics(id, update.state.Query)
-				inError = err != nil
-				if inError {
-					ch <- Update{
-						Err: err,
+				if newState.ID != "" {
+					newLines, err := provider.Lyrics(newState.ID, newState.Query)
+					if err != nil {
+						state.Err = err
 					}
-					break
+					lines = newLines
+				} else {
+					lines = nil
 				}
-				lines = newLines
 				index = 0
 			}
-			if update.state.Playing != playing {
+			if newState.Playing != state.Playing {
 				changed = true
-				playing = update.state.Playing
 			}
-			position = update.state.Position
-			newIndex := getIndex(position, index, lines)
-			if newIndex != index {
-				changed = true
-				index = newIndex
+			state = newState
+		case <-ticker.C:
+			if !state.Playing || !lyrics.Timesynced(lines) {
+				break
 			}
 
-		case <-timerCh:
-			if playing && lyrics.Timesynced(lines) {
-				now := time.Now()
-				position += int(now.Sub(lastUpdate).Milliseconds())
-				lastUpdate = now
-
-				newIndex := getIndex(position, index, lines)
-				if newIndex != index {
-					changed = true
-					index = newIndex
-				}
-			}
+			now := time.Now()
+			state.Position += int(now.Sub(lastUpdate).Milliseconds())
+			lastUpdate = now
 		}
 
-		if changed && !inError {
+		newIndex := getIndex(state.Position, index, lines)
+		if newIndex != index {
+			changed = true
+			index = newIndex
+		}
+
+		if changed {
 			ch <- Update{
 				Lines:   lines,
 				Index:   index,
-				Playing: playing,
-				Err:     nil,
+				Playing: state.Playing,
+				Err:     state.Err,
 			}
 		}
 	}
 }
 
-func listenTimer(ch chan int, interval int) {
-	for {
-		ch <- 0
-		time.Sleep(time.Millisecond * time.Duration(interval))
-	}
+type playerState struct {
+	player.State
+	Err error
 }
 
-func listenUpdate(player player.Player, ch chan stateUpdate, interval int) {
+func listenPlayer(player player.Player, ch chan playerState, interval int) {
 	for {
 		state, err := player.State()
-		ch <- stateUpdate{
-			state: state,
-			err:   err,
+
+		st := playerState{Err: err}
+		if state != nil {
+			st.ID = state.ID
+			st.Query = state.Query
+			st.Playing = state.Playing
+			st.Position = state.Position
 		}
+		ch <- st
+
 		time.Sleep(time.Millisecond * time.Duration(interval))
 	}
 }
@@ -143,28 +117,20 @@ func getIndex(position, curIndex int, lines []lyrics.Line) int {
 	}
 
 	if position >= lines[curIndex].Time {
-		if curIndex == len(lines)-1 {
-			return curIndex
-		}
-		if position < lines[curIndex+1].Time {
-			return curIndex
-		} else {
-			// search after
-			for i, line := range lines[curIndex:] {
-				if position < line.Time {
-					return curIndex + i - 1
-				}
-			}
-		}
-	}
-	// search before
-	for i, line := range lines {
-		if position < line.Time {
-			if i != 0 {
+		// search after
+		for i := curIndex + 1; i < len(lines); i++ {
+			if position < lines[i].Time {
 				return i - 1
 			}
-			return curIndex
+		}
+		return len(lines) - 1
+	}
+
+	// search before
+	for i := curIndex; i > 0; i-- {
+		if position > lines[i].Time {
+			return i
 		}
 	}
-	return len(lines) - 1
+	return 0
 }

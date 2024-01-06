@@ -6,6 +6,7 @@ import (
 	"os"
 	"sptlrx/config"
 	"sptlrx/lyrics"
+	"sptlrx/player"
 	"sptlrx/pool"
 	"sptlrx/services/hosted"
 	"sptlrx/services/local"
@@ -53,97 +54,108 @@ var rootCmd = &cobra.Command{
 	SilenceUsage: true,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if cmd.Flags().Changed("config") {
-			// custom config path
-			config.Path = FlagConfig
-		}
-
-		conf, err := config.Load()
+		conf, err := loadConfig(cmd)
 		if err != nil {
-			if !cmd.Flags().Changed("config") && errors.Is(err, os.ErrNotExist) {
-				conf = config.New()
-				fmt.Print(banner + "\n")
-				fmt.Printf("Config file location: %s\n", config.Path)
-				config.Save(conf)
-			} else {
-				return fmt.Errorf("couldn't load config: %w", err)
-			}
+			return fmt.Errorf("couldn't load config: %w", err)
 		}
-
-		if FlagCookie != "" {
-			conf.Cookie = FlagCookie
-		} else if envCookie := os.Getenv("SPOTIFY_COOKIE"); envCookie != "" {
-			conf.Cookie = envCookie
-		}
-
-		if cmd.Flags().Changed("player") {
-			conf.Player = FlagPlayer
-		}
-
-		player, err := config.GetPlayer(conf)
+		player, err := loadPlayer(conf)
 		if err != nil {
-			if errors.Is(err, spotify.ErrInvalidCookie) {
-				fmt.Println("If you want to use Spotify as your player, you need to set up your cookie.")
-				fmt.Println(help)
-			}
-			return err
+			return fmt.Errorf("couldn't load player: %w", err)
+		}
+		provider, err := loadProvider(conf, player)
+		if err != nil {
+			return fmt.Errorf("couldn't load provider: %w", err)
 		}
 
-		var provider lyrics.Provider
-		if conf.Cookie != "" {
-			if spt, ok := player.(*spotify.Client); ok {
-				// use existing spotify client
-				provider = spt
-			} else {
-				// create new client
-				provider, _ = spotify.New(conf.Cookie)
-			}
-		} else if conf.Local.Folder != "" {
-			// use local provider
-			provider, err = local.New(conf.Local.Folder)
-			if err != nil {
-				return err
-			}
-		} else {
-			// use hosted provider
-			provider = hosted.New(conf.Host)
-		}
-
-		if cmd.Flags().Changed("before") {
-			conf.Style.Before = parseStyleFlag(FlagStyleBefore)
-		}
-		if cmd.Flags().Changed("current") {
-			conf.Style.Current = parseStyleFlag(FlagStyleCurrent)
-		}
-		if cmd.Flags().Changed("after") {
-			conf.Style.After = parseStyleFlag(FlagStyleAfter)
-		}
-		if cmd.Flags().Changed("halign") {
-			conf.Style.HAlignment = FlagHAlignment
-		}
-
-		if FlagVerbose {
-			conf.IgnoreErrors = false
-		}
-
-		var ch = make(chan pool.Update)
+		ch := make(chan pool.Update)
 		go pool.Listen(player, provider, conf, ch)
 
-		p := tea.NewProgram(
+		_, err = tea.NewProgram(
 			&ui.Model{
 				Channel: ch,
 				Config:  conf,
 			},
 			tea.WithAltScreen(),
-		)
-		_, err = p.Run()
+		).Run()
 		return err
 	},
 }
 
+func loadConfig(cmd *cobra.Command) (*config.Config, error) {
+	if cmd.Flags().Changed("config") {
+		// custom config path
+		config.Path = FlagConfig
+	}
+
+	conf, err := config.Load()
+	if err != nil {
+		if cmd.Flags().Changed("config") || !errors.Is(err, os.ErrNotExist) {
+			return nil, err
+		}
+		// create new config
+		conf = config.New()
+		fmt.Print(banner + "\n")
+		fmt.Printf("Config file location: %s\n", config.Path)
+		config.Save(conf)
+	}
+
+	if envCookie := os.Getenv("SPOTIFY_COOKIE"); envCookie != "" {
+		conf.Cookie = envCookie
+	}
+	if FlagCookie != "" {
+		conf.Cookie = FlagCookie
+	}
+	if FlagVerbose {
+		conf.IgnoreErrors = false
+	}
+
+	if cmd.Flags().Changed("player") {
+		conf.Player = FlagPlayer
+	}
+	if cmd.Flags().Changed("before") {
+		conf.Style.Before = parseStyleFlag(FlagStyleBefore)
+	}
+	if cmd.Flags().Changed("current") {
+		conf.Style.Current = parseStyleFlag(FlagStyleCurrent)
+	}
+	if cmd.Flags().Changed("after") {
+		conf.Style.After = parseStyleFlag(FlagStyleAfter)
+	}
+	if cmd.Flags().Changed("halign") {
+		conf.Style.HAlignment = FlagHAlignment
+	}
+	return conf, nil
+}
+
+func loadPlayer(conf *config.Config) (player.Player, error) {
+	player, err := config.GetPlayer(conf)
+	if err != nil {
+		if errors.Is(err, spotify.ErrInvalidCookie) {
+			fmt.Println("If you want to use Spotify as your player, you need to set up your cookie.")
+			fmt.Println(help)
+		}
+		return nil, err
+	}
+	return player, nil
+}
+
+func loadProvider(conf *config.Config, player player.Player) (lyrics.Provider, error) {
+  if conf.Local.Folder != "" {
+    return local.New(conf.Local.Folder)
+  }
+	if conf.Cookie == "" {
+		return hosted.New(conf.Host), nil
+	}
+	if spt, ok := player.(*spotify.Client); ok {
+		// use existing spotify client
+		return spt, nil
+	}
+	// create new spotify client
+	return spotify.New(conf.Cookie)
+}
+
 func parseStyleFlag(value string) config.Style {
 	var style config.Style
-
 	for _, part := range strings.Split(value, ",") {
 		switch part {
 		case "bold":
