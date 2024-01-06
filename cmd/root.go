@@ -50,7 +50,7 @@ var rootCmd = &cobra.Command{
 	Use:          "sptlrx",
 	Short:        "Synchronized lyrics in your terminal",
 	Long:         "A CLI app that shows time-synchronized lyrics in your terminal",
-	Version:      "v1.1.0",
+	Version:      "v1.2.0",
 	SilenceUsage: true,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
