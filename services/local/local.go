@@ -2,6 +2,7 @@ package local
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -82,6 +83,9 @@ func createIndex(folder string) ([]*file, error) {
 	index := []*file{}
 
 	return index, filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
+		if d == nil {
+			return fmt.Errorf("invalid path: %s", path)
+		}
 		if d.IsDir() || !strings.HasSuffix(d.Name(), ".lrc") {
 			return nil
 		}
