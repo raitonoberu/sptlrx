@@ -208,7 +208,7 @@ mpris:
   players: []
 ```
 
-Linux only. System player that supports MPRIS protocol will be used. You can also specify a whitelist of players to use, example: `players: [rhythmbox, spotifyd]`. Run `playerctl -l` to get the names.
+Linux only. System player that supports MPRIS protocol will be used. You can also specify a whitelist of players to use, example: `players: [rhythmbox, spotifyd, ncspot]`. Run `playerctl -l` to get the names.
 
 ### Browser
 
