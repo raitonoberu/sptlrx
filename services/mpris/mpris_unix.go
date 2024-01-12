@@ -3,7 +3,6 @@
 package mpris
 
 import (
-	"path"
 	"sptlrx/player"
 	"strings"
 
@@ -38,15 +37,13 @@ func (c *Client) getPlayer() (*mpris.Player, error) {
 		return mpris.New(conn, players[0]), nil
 	}
 
-	// iterating over configured names
+	// iterating over configured whitelisted players
 	for _, p := range c.players {
+		// adding the D-Bus bus name prefix
+		p := "org.mpris.MediaPlayer2." + p
 		for _, player := range players {
-			// support pattern matching
-			match, err := path.Match("org.mpris.MediaPlayer2."+p, player)
-			if err != nil {
-				return nil, err
-			}
-			if match {
+			// check for the name with and without the instance suffix
+			if p == player || strings.HasPrefix(player, p+".instance") {
 				return mpris.New(conn, player), nil
 			}
 		}
