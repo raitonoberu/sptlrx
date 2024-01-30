@@ -104,6 +104,7 @@ func (m *Model) View() string {
 		return ""
 	}
 	if m.state.Err != nil && !m.Config.IgnoreErrors {
+		os.Stderr.WriteString(m.state.Err.Error())
 		return gloss.PlaceVertical(
 			m.h, gloss.Center,
 			m.styleCurrent.

@@ -1,7 +1,10 @@
 package lyrics
 
+import "sptlrx/player"
+
 type Provider interface {
-	Lyrics(id, query string) ([]Line, error)
+	Lyrics(state player.State) ([]Line, error)
+	Name() string
 }
 
 type Line struct {

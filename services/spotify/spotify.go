@@ -77,15 +77,20 @@ func (c *Client) State() (*player.State, error) {
 	}, nil
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
-	if strings.HasPrefix(id, "spotify:") {
-		return c.lyrics(id[8:])
+func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
+	if strings.HasPrefix(state.ID, "spotify:") {
+		return c.lyrics(state.ID[8:])
 	}
-	id, err := c.search(query)
+	id, err := c.search(state.Artist + " " + state.Title)
 	if err != nil {
 		return nil, err
 	}
-	return c.lyrics(id)
+	lys, err := c.lyrics(id)
+	if len(lys) > 0 && err != nil {
+		return lys, err
+	} else {
+		return nil, err
+	}
 }
 
 func (c *Client) search(query string) (string, error) {
@@ -241,4 +246,8 @@ type searchBody struct {
 		} `json:"items"`
 		Total int `json:"total"`
 	} `json:"tracks"`
+}
+
+func (c *Client) Name() string {
+	return "SPOTI"
 }

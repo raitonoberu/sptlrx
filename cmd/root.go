@@ -8,6 +8,7 @@ import (
 	"sptlrx/lyrics"
 	"sptlrx/player"
 	"sptlrx/pool"
+	"sptlrx/services/combo"
 	"sptlrx/services/hosted"
 	"sptlrx/services/local"
 	"sptlrx/services/spotify"
@@ -140,18 +141,30 @@ func loadPlayer(conf *config.Config) (player.Player, error) {
 }
 
 func loadProvider(conf *config.Config, player player.Player) (lyrics.Provider, error) {
-	if conf.Local.Folder != "" {
-		return local.New(conf.Local.Folder)
-	}
+	providers := []lyrics.Provider{}
 	if conf.Cookie == "" {
-		return hosted.New(conf.Host), nil
+
+		coovieProv := hosted.New(conf.Host)
+		providers = append(providers, coovieProv)
 	}
 	if spt, ok := player.(*spotify.Client); ok {
+		// spt, _ := spotify.New(conf.Cookie)
 		// use existing spotify client
-		return spt, nil
+		providers = append(providers, spt)
+	}
+	if conf.Local.Folder != "" {
+		localProv, err := local.New(conf.Local.Folder)
+		if err == nil {
+			providers = append(providers, localProv)
+		}
+		// return local.New(conf.Local.Folder)
 	}
 	// create new spotify client
-	return spotify.New(conf.Cookie)
+	if len(providers) == 0 {
+		var s, _ = spotify.New(conf.Cookie)
+		providers = append(providers, s)
+	}
+	return combo.New(providers)
 }
 
 func parseStyleFlag(value string) config.Style {

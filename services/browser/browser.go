@@ -154,7 +154,8 @@ func (c *Client) State() (*player.State, error) {
 	}
 	return &player.State{
 		ID:       query,
-		Query:    query,
+		Artist:   c.artist,
+		Title:    c.title,
 		Position: position,
 		Playing:  c.state == playing,
 	}, nil

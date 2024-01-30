@@ -6,10 +6,11 @@ import (
 	"net/http"
 	"net/url"
 	"sptlrx/lyrics"
+	"sptlrx/player"
 )
 
 // Host your own: https://github.com/raitonoberu/lyricsapi
-func New(host string) *Client {
+func New(host string) lyrics.Provider {
 	return &Client{
 		host: host,
 	}
@@ -20,7 +21,9 @@ type Client struct {
 	host string
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
+func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
+
+	query := state.Artist + " " + state.Title
 	var url = fmt.Sprintf("https://%s/api/lyrics?name=%s", c.host, url.QueryEscape(query))
 
 	req, _ := http.NewRequest("GET", url, nil)
@@ -32,5 +35,13 @@ func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
 
 	var result []lyrics.Line
 	err = json.NewDecoder(resp.Body).Decode(&result)
-	return result, err
+	if len(result) > 0 {
+		return result, err
+	} else {
+		return nil, err
+	}
+}
+
+func (c *Client) Name() string {
+	return "HOSTD"
 }

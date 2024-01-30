@@ -74,9 +74,24 @@ func (c *Client) State() (*player.State, error) {
 		return nil, err
 	}
 
-	var title string
+	var songPath string = ""
+	if p, ok := meta["xesam:url"].Value().(string); ok {
+		songPath = p
+	}
+
+	var trackNumber int = 0
+	if n, ok := meta["xesam:trackNumber"].Value().(int); ok {
+		trackNumber = n
+	}
+
+	var title string = ""
 	if t, ok := meta["xesam:title"].Value().(string); ok {
 		title = t
+	}
+
+	var album string = ""
+	if al, ok := meta["xesam:album"].Value().(string); ok {
+		album = al
 	}
 
 	var artist string
@@ -87,17 +102,14 @@ func (c *Client) State() (*player.State, error) {
 		artist = strings.Join(a.([]string), " ")
 	}
 
-	var query string
-	if artist != "" {
-		query = artist + " " + title
-	} else {
-		query = title
-	}
-
 	return &player.State{
-		ID:       query, // use query as id since mpris:trackid is broken
-		Query:    query,
-		Position: int(position * 1000), // secs to ms
-		Playing:  status == mpris.PlaybackPlaying,
+		ID:          songPath, // use query as id since mpris:trackid is broken
+		TrackNumber: trackNumber,
+		Artist:      artist,
+		Album:       album,
+		Title:       title,
+		SongPath:    songPath,
+		Position:    int(position * 1000), // secs to ms
+		Playing:     status == mpris.PlaybackPlaying,
 	}, err
 }

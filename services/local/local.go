@@ -8,16 +8,18 @@ import (
 	"os"
 	"path/filepath"
 	"sptlrx/lyrics"
+	"sptlrx/player"
 	"strconv"
 	"strings"
 )
 
 var replacer = strings.NewReplacer(
 	"_", " ", "-", " ",
-	",", "", ".", "",
-	"!", "", "?", "",
-	"(", "", ")", "",
-	"[", "", "]", "",
+	",", " ", ".", " ",
+	"!", " ", "?", " ",
+	"(", " ", ")", " ",
+	"[", " ", "]", " ",
+	"/", " ",
 )
 
 type file struct {
@@ -25,7 +27,7 @@ type file struct {
 	NameParts []string
 }
 
-func New(folder string) (*Client, error) {
+func New(folder string) (lyrics.Provider, error) {
 	index, err := createIndex(folder)
 	if err != nil {
 		return nil, err
@@ -38,8 +40,9 @@ type Client struct {
 	index []*file
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
-	f := c.findFile(query)
+func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
+	f := c.findFile(state)
+
 	if f == nil {
 		return nil, nil
 	}
@@ -53,12 +56,24 @@ func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
 	return parseLrcFile(reader), nil
 }
 
-func (c *Client) findFile(query string) *file {
-	parts := splitString(query)
-
+func (c *Client) findFile(state player.State) *file {
+	possiblePath := strings.Replace(strings.Replace(state.SongPath, ".mp3", ".lrc", 1), "file://", "", 1)
 	var best *file
+	parts := splitString(state.Artist + " " + state.Album + " " + strconv.Itoa(state.TrackNumber) + " " + state.Title)
+
+	existsFile, existsErr := os.Stat(possiblePath)
+
+	if existsErr == nil && existsFile != nil {
+		best = &file{
+			Path:      possiblePath,
+			NameParts: parts,
+		}
+		return best
+	}
+
 	var maxScore int
 	for _, f := range c.index {
+
 		var score int
 		for _, part := range parts {
 			for _, namePart := range f.NameParts {
@@ -76,7 +91,10 @@ func (c *Client) findFile(query string) *file {
 			}
 		}
 	}
-	return best
+	if strings.Contains(best.Path, state.Artist) && strings.Contains(best.Path, state.Album) && strings.Contains(best.Path, state.Title) && strings.Contains(best.Path, strconv.Itoa(state.TrackNumber)) {
+		return best
+	}
+	return nil
 }
 
 func createIndex(folder string) ([]*file, error) {
@@ -93,8 +111,8 @@ func createIndex(folder string) ([]*file, error) {
 		if d.IsDir() || !strings.HasSuffix(d.Name(), ".lrc") {
 			return nil
 		}
-		name := strings.TrimSuffix(d.Name(), ".lrc")
-		parts := splitString(name)
+
+		parts := splitString(path)
 
 		index = append(index, &file{
 			Path:      path,
@@ -133,4 +151,8 @@ func parseLrcLine(line string) lyrics.Line {
 		Time:  h*60*1000 + m*1000 + s*10,
 		Words: line[10:],
 	}
+}
+
+func (c *Client) Name() string {
+	return "LOCAL"
 }
