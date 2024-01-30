@@ -53,7 +53,16 @@ func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
 	}
 	defer reader.Close()
 
-	return parseLrcFile(reader), nil
+	lys := parseLrcFile(reader)
+	// var header []lyrics.Line
+	// header = append(header, lyrics.Line{
+	// 	Time:  0,
+	// 	Words: "Loading from Local...",
+	// })
+	// if lys[0].Time < 10 {
+	// 	lys[0].Time = 10
+	// }
+	return lys, nil
 }
 
 func (c *Client) findFile(state player.State) *file {

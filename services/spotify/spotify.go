@@ -87,6 +87,14 @@ func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
 	}
 	lys, err := c.lyrics(id)
 	if len(lys) > 0 && err != nil {
+		// var header []lyrics.Line
+		// header = append(header, lyrics.Line{
+		// 	Time:  0,
+		// 	Words: "Loading from Spotify...",
+		// })
+		// if lys[0].Time < 10 {
+		// 	lys[0].Time = 10
+		// }
 		return lys, err
 	} else {
 		return nil, err

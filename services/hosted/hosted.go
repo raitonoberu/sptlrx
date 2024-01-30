@@ -36,7 +36,15 @@ func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
 	var result []lyrics.Line
 	err = json.NewDecoder(resp.Body).Decode(&result)
 	if len(result) > 0 {
-		return result, err
+		// var header []lyrics.Line
+		// header = append(header, lyrics.Line{
+		// 	Time:  0,
+		// 	Words: "Loading from Hosted...",
+		// })
+		// if result[0].Time < 10 {
+		// 	result[0].Time = 10
+		// }
+		return result, nil
 	} else {
 		return nil, err
 	}
