@@ -44,8 +44,11 @@ func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
 	f := c.findFile(state)
 
 	if f == nil {
+		os.Stderr.WriteString("LOCAL: Could not find local lyrics" + "\n")
 		return nil, nil
 	}
+
+	os.Stderr.WriteString("LOCAL: Found lyrics at:" + f.Path + "\n")
 
 	reader, err := os.Open(f.Path)
 	if err != nil {

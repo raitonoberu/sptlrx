@@ -8,7 +8,7 @@ import (
 	"sptlrx/player"
 )
 
-func New(address string) *Client {
+func New(address string) player.Player {
 	return &Client{address: address}
 }
 

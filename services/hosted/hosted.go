@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"sptlrx/lyrics"
 	"sptlrx/player"
 )
@@ -29,6 +30,7 @@ func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
 	req, _ := http.NewRequest("GET", url, nil)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
+		os.Stderr.WriteString("HOSTD: Could not find lyrics" + "\n")
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -44,8 +46,10 @@ func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
 		// if result[0].Time < 10 {
 		// 	result[0].Time = 10
 		// }
+		os.Stderr.WriteString("HOSTD: Found Lyrics" + "\n")
 		return result, nil
 	} else {
+		os.Stderr.WriteString("HOSTD: Empty Lyrics" + "\n")
 		return nil, err
 	}
 }

@@ -21,17 +21,17 @@ var pipeCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("couldn't load config: %w", err)
 		}
-		player, err := loadPlayer(conf)
+		players, err := loadPlayers(conf)
 		if err != nil {
-			return fmt.Errorf("couldn't load player: %w", err)
+			return fmt.Errorf("couldn't load players: %w", err)
 		}
-		provider, err := loadProvider(conf, player)
+		provider, err := loadProvider(conf)
 		if err != nil {
 			return fmt.Errorf("couldn't load provider: %w", err)
 		}
 
 		ch := make(chan pool.Update)
-		go pool.Listen(player, provider, conf, ch)
+		go pool.Listen(players, provider, conf, ch)
 
 		for update := range ch {
 			printUpdate(update, conf)

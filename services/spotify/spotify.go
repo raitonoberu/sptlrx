@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"sptlrx/lyrics"
 	"sptlrx/player"
 	"strings"
@@ -21,7 +22,13 @@ const lyricsUrl = "https://spclient.wg.spotify.com/color-lyrics/v2/track/"
 const stateUrl = "https://api.spotify.com/v1/me/player/currently-playing"
 const searchUrl = "https://api.spotify.com/v1/search?"
 
-func New(cookie string) (*Client, error) {
+func NewProvider(cookie string) (lyrics.Provider, error) {
+	if cookie == "" {
+		return nil, ErrInvalidCookie
+	}
+	return &Client{cookie: cookie}, nil
+}
+func NewPlayer(cookie string) (player.Player, error) {
 	if cookie == "" {
 		return nil, ErrInvalidCookie
 	}
@@ -79,10 +86,12 @@ func (c *Client) State() (*player.State, error) {
 
 func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
 	if strings.HasPrefix(state.ID, "spotify:") {
+		os.Stderr.WriteString("SPTFY: Found Lyrics" + "\n")
 		return c.lyrics(state.ID[8:])
 	}
 	id, err := c.search(state.Artist + " " + state.Title)
 	if err != nil {
+		os.Stderr.WriteString("SPTFY: Error Finding Lyrics" + "\n")
 		return nil, err
 	}
 	lys, err := c.lyrics(id)
@@ -95,8 +104,10 @@ func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
 		// if lys[0].Time < 10 {
 		// 	lys[0].Time = 10
 		// }
+		os.Stderr.WriteString("SPTFY: Found Lyrics" + "\n")
 		return lys, err
 	} else {
+		os.Stderr.WriteString("SPTFY: Empty Lyrics" + "\n")
 		return nil, err
 	}
 }

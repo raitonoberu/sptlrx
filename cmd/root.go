@@ -36,7 +36,6 @@ const help = `  1. Open your browser.
 
 var (
 	FlagCookie string
-	FlagPlayer string
 	FlagConfig string
 
 	FlagStyleBefore  string
@@ -59,17 +58,17 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("couldn't load config: %w", err)
 		}
-		player, err := loadPlayer(conf)
+		players, err := loadPlayers(conf)
 		if err != nil {
 			return fmt.Errorf("couldn't load player: %w", err)
 		}
-		provider, err := loadProvider(conf, player)
+		provider, err := loadProvider(conf)
 		if err != nil {
 			return fmt.Errorf("couldn't load provider: %w", err)
 		}
 
 		ch := make(chan pool.Update)
-		go pool.Listen(player, provider, conf, ch)
+		go pool.Listen(players, provider, conf, ch)
 
 		_, err = tea.NewProgram(
 			&ui.Model{
@@ -110,9 +109,6 @@ func loadConfig(cmd *cobra.Command) (*config.Config, error) {
 		conf.IgnoreErrors = false
 	}
 
-	if cmd.Flags().Changed("player") {
-		conf.Player = FlagPlayer
-	}
 	if cmd.Flags().Changed("before") {
 		conf.Style.Before = parseStyleFlag(FlagStyleBefore)
 	}
@@ -128,8 +124,8 @@ func loadConfig(cmd *cobra.Command) (*config.Config, error) {
 	return conf, nil
 }
 
-func loadPlayer(conf *config.Config) (player.Player, error) {
-	player, err := config.GetPlayer(conf)
+func loadPlayers(conf *config.Config) ([]*player.Player, error) {
+	players, err := config.GetPlayers(conf)
 	if err != nil {
 		if errors.Is(err, spotify.ErrInvalidCookie) {
 			fmt.Println("If you want to use Spotify as your player, you need to set up your cookie.")
@@ -137,20 +133,19 @@ func loadPlayer(conf *config.Config) (player.Player, error) {
 		}
 		return nil, err
 	}
-	return player, nil
+	return players, nil
 }
 
-func loadProvider(conf *config.Config, player player.Player) (lyrics.Provider, error) {
+func loadProvider(conf *config.Config) (lyrics.Provider, error) {
 	providers := []lyrics.Provider{}
+
 	if conf.Cookie == "" {
 
 		coovieProv := hosted.New(conf.Host)
 		providers = append(providers, coovieProv)
-	}
-	if spt, ok := player.(*spotify.Client); ok {
-		// spt, _ := spotify.New(conf.Cookie)
-		// use existing spotify client
-		providers = append(providers, spt)
+	} else {
+		var s, _ = spotify.NewProvider(conf.Cookie)
+		providers = append(providers, s)
 	}
 	if conf.Local.Folder != "" {
 		localProv, err := local.New(conf.Local.Folder)
@@ -158,11 +153,6 @@ func loadProvider(conf *config.Config, player player.Player) (lyrics.Provider, e
 			providers = append(providers, localProv)
 		}
 		// return local.New(conf.Local.Folder)
-	}
-	// create new spotify client
-	if len(providers) == 0 {
-		var s, _ = spotify.New(conf.Cookie)
-		providers = append(providers, s)
 	}
 	return combo.New(providers)
 }
@@ -196,7 +186,6 @@ func parseStyleFlag(value string) config.Style {
 
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&FlagCookie, "cookie", "c", "", "your cookie")
-	rootCmd.PersistentFlags().StringVarP(&FlagPlayer, "player", "p", "spotify", "what player to use")
 	rootCmd.PersistentFlags().StringVar(&FlagConfig, "config", config.Path, "path to config file")
 
 	rootCmd.Flags().StringVar(&FlagStyleBefore, "before", "bold", "style of the lines before the current one")

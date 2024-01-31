@@ -18,13 +18,15 @@ type Update struct {
 
 // Listen polls for lyrics updates and writes them to the channel.
 func Listen(
-	player player.Player,
+	players []*player.Player,
 	provider lyrics.Provider,
 	conf *config.Config,
 	ch chan Update,
 ) {
 	stateCh := make(chan playerState)
-	go listenPlayer(player, stateCh, conf.UpdateInterval)
+	for _, p := range players {
+		go listenPlayer(*p, stateCh, conf.UpdateInterval)
+	}
 
 	ticker := time.NewTicker(
 		time.Millisecond * time.Duration(conf.TimerInterval),
