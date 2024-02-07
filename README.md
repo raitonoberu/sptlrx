@@ -92,7 +92,7 @@ style:
     foreground: ""
     bold: true
     italic: false
-    undeline: false
+    underline: false
     strikethrough: false
     blink: false
     faint: false
@@ -103,7 +103,7 @@ style:
     foreground: ""
     bold: true
     italic: false
-    undeline: false
+    underline: false
     strikethrough: false
     blink: false
     faint: false
@@ -114,7 +114,7 @@ style:
     foreground: ""
     bold: false
     italic: false
-    undeline: false
+    underline: false
     strikethrough: false
     blink: false
     faint: true

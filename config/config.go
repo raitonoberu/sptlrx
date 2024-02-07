@@ -124,7 +124,7 @@ type Style struct {
 
 	Bold          bool `yaml:"bold"`
 	Italic        bool `yaml:"italic"`
-	Undeline      bool `yaml:"undeline"`
+	Underline      bool `yaml:"underline"`
 	Strikethrough bool `yaml:"strikethrough"`
 	Blink         bool `yaml:"blink"`
 	Faint         bool `yaml:"faint"`
@@ -146,7 +146,7 @@ func (s Style) Parse() gloss.Style {
 	if s.Italic {
 		style = style.Italic(true)
 	}
-	if s.Undeline {
+	if s.Underline {
 		style = style.Underline(true)
 	}
 	if s.Strikethrough {
