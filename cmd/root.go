@@ -163,7 +163,7 @@ func parseStyleFlag(value string) config.Style {
 		case "italic":
 			style.Italic = true
 		case "underline":
-			style.Undeline = true
+			style.Underline = true
 		case "strikethrough":
 			style.Strikethrough = true
 		case "blink":
