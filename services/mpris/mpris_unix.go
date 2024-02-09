@@ -3,14 +3,16 @@
 package mpris
 
 import (
+	"os"
 	"sptlrx/player"
+	"strconv"
 	"strings"
 
 	"github.com/Pauloo27/go-mpris"
 	"github.com/godbus/dbus/v5"
 )
 
-func New(players []string) (*Client, error) {
+func New(players []string) (player.Player, error) {
 	return &Client{players}, nil
 }
 
@@ -52,6 +54,8 @@ func (c *Client) getPlayer() (*mpris.Player, error) {
 }
 
 func (c *Client) State() (*player.State, error) {
+
+	os.Stderr.WriteString("MPRIS: Found Song" + "\n")
 	p, err := c.getPlayer()
 	if err != nil {
 		return nil, err
@@ -74,9 +78,28 @@ func (c *Client) State() (*player.State, error) {
 		return nil, err
 	}
 
-	var title string
+	var songPath string = ""
+	if p, ok := meta["xesam:url"].Value().(string); ok {
+		songPath = p
+		os.Stderr.WriteString("MPRIS: Path: " + songPath + "\n")
+	}
+
+	var trackNumber int = 0
+	if n, ok := meta["xesam:trackNumber"].Value().(int); ok {
+		trackNumber = n
+		os.Stderr.WriteString("MPRIS: TrackNum: " + strconv.Itoa(trackNumber) + "\n")
+	}
+
+	var title string = ""
 	if t, ok := meta["xesam:title"].Value().(string); ok {
 		title = t
+		os.Stderr.WriteString("MPRIS: Title: " + title + "\n")
+	}
+
+	var album string = ""
+	if al, ok := meta["xesam:album"].Value().(string); ok {
+		album = al
+		os.Stderr.WriteString("MPRIS: Album: " + album + "\n")
 	}
 
 	var artist string
@@ -86,18 +109,16 @@ func (c *Client) State() (*player.State, error) {
 	case []string:
 		artist = strings.Join(a.([]string), " ")
 	}
-
-	var query string
-	if artist != "" {
-		query = artist + " " + title
-	} else {
-		query = title
-	}
+	os.Stderr.WriteString("MPRIS: Artist: " + artist + "\n")
 
 	return &player.State{
-		ID:       query, // use query as id since mpris:trackid is broken
-		Query:    query,
-		Position: int(position * 1000), // secs to ms
-		Playing:  status == mpris.PlaybackPlaying,
+		ID:          songPath, // use query as id since mpris:trackid is broken
+		TrackNumber: trackNumber,
+		Artist:      artist,
+		Album:       album,
+		Title:       title,
+		SongPath:    songPath,
+		Position:    int(position * 1000), // secs to ms
+		Playing:     status == mpris.PlaybackPlaying,
 	}, err
 }

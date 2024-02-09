@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"sptlrx/lyrics"
 	"sptlrx/player"
 	"strings"
@@ -21,7 +22,13 @@ const lyricsUrl = "https://spclient.wg.spotify.com/color-lyrics/v2/track/"
 const stateUrl = "https://api.spotify.com/v1/me/player/currently-playing"
 const searchUrl = "https://api.spotify.com/v1/search?"
 
-func New(cookie string) (*Client, error) {
+func NewProvider(cookie string) (lyrics.Provider, error) {
+	if cookie == "" {
+		return nil, ErrInvalidCookie
+	}
+	return &Client{cookie: cookie}, nil
+}
+func NewPlayer(cookie string) (player.Player, error) {
 	if cookie == "" {
 		return nil, ErrInvalidCookie
 	}
@@ -77,15 +84,32 @@ func (c *Client) State() (*player.State, error) {
 	}, nil
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
-	if strings.HasPrefix(id, "spotify:") {
-		return c.lyrics(id[8:])
+func (c *Client) Lyrics(state player.State) ([]lyrics.Line, error) {
+	if strings.HasPrefix(state.ID, "spotify:") {
+		os.Stderr.WriteString("SPTFY: Found Lyrics" + "\n")
+		return c.lyrics(state.ID[8:])
 	}
-	id, err := c.search(query)
+	id, err := c.search(state.Artist + " " + state.Title)
 	if err != nil {
+		os.Stderr.WriteString("SPTFY: Error Finding Lyrics" + "\n")
 		return nil, err
 	}
-	return c.lyrics(id)
+	lys, err := c.lyrics(id)
+	if len(lys) > 0 && err != nil {
+		// var header []lyrics.Line
+		// header = append(header, lyrics.Line{
+		// 	Time:  0,
+		// 	Words: "Loading from Spotify...",
+		// })
+		// if lys[0].Time < 10 {
+		// 	lys[0].Time = 10
+		// }
+		os.Stderr.WriteString("SPTFY: Found Lyrics" + "\n")
+		return lys, err
+	} else {
+		os.Stderr.WriteString("SPTFY: Empty Lyrics" + "\n")
+		return nil, err
+	}
 }
 
 func (c *Client) search(query string) (string, error) {
@@ -241,4 +265,8 @@ type searchBody struct {
 		} `json:"items"`
 		Total int `json:"total"`
 	} `json:"tracks"`
+}
+
+func (c *Client) Name() string {
+	return "SPOTI"
 }

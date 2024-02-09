@@ -8,7 +8,7 @@ import (
 	"sptlrx/player"
 )
 
-func New(address string) *Client {
+func New(address string) player.Player {
 	return &Client{address: address}
 }
 
@@ -71,12 +71,11 @@ func (c *Client) State() (*player.State, error) {
 		artist += a.Name
 	}
 
-	query := artist + " " + current.Result.Name
-
 	return &player.State{
 		ID:       current.Result.URI,
-		Query:    query,
+		Title:    current.Result.Name,
 		Position: position.Result,
+		Artist:   artist,
 		Playing:  state.Result == "playing",
 	}, err
 }

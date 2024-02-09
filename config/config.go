@@ -31,12 +31,12 @@ func init() {
 }
 
 type Config struct {
-	Cookie         string `yaml:"cookie"`
-	Player         string `default:"spotify" yaml:"player"`
-	Host           string `default:"lyricsapi.vercel.app" yaml:"host"`
-	IgnoreErrors   bool   `default:"true" yaml:"ignoreErrors"`
-	TimerInterval  int    `default:"200" yaml:"timerInterval"`
-	UpdateInterval int    `default:"2000" yaml:"updateInterval"`
+	Cookie         string   `yaml:"cookie"`
+	Players        []string `default:"[spotify]" yaml:"players"`
+	Host           string   `default:"lyricsapi.vercel.app" yaml:"host"`
+	IgnoreErrors   bool     `default:"true" yaml:"ignoreErrors"`
+	TimerInterval  int      `default:"200" yaml:"timerInterval"`
+	UpdateInterval int      `default:"2000" yaml:"updateInterval"`
 
 	Style struct {
 		HAlignment string `default:"center" yaml:"hAlignment"`
@@ -172,19 +172,32 @@ func validateColor(color string) bool {
 	return false
 }
 
-// GetPlayer returns a player based on config values
-func GetPlayer(conf *Config) (player.Player, error) {
-	switch conf.Player {
-	case "spotify":
-		return spotify.New(conf.Cookie)
-	case "mpd":
-		return mpd.New(conf.Mpd.Address, conf.Mpd.Password), nil
-	case "mopidy":
-		return mopidy.New(conf.Mopidy.Address), nil
-	case "mpris":
-		return mpris.New(conf.Mpris.Players)
-	case "browser":
-		return browser.New(conf.Browser.Port)
+// GetPlayers returns a player based on config values
+func GetPlayers(conf *Config) ([]*player.Player, error) {
+	var players []*player.Player
+	for _, p := range conf.Players {
+		os.Stderr.WriteString("LOADR: Processing " + p)
+		switch p {
+		case "spotify":
+			spotifyPlayer, _ := spotify.NewPlayer(conf.Cookie)
+			players = append(players, &spotifyPlayer)
+		case "mpd":
+			mpdPlayer := mpd.New(conf.Mpd.Address, conf.Mpd.Password)
+			players = append(players, &mpdPlayer)
+		case "mopidy":
+			mopidyPlayer := mopidy.New(conf.Mopidy.Address)
+			players = append(players, &mopidyPlayer)
+		case "mpris":
+			mprisPlayer, _ := mpris.New(conf.Mpris.Players)
+			players = append(players, &mprisPlayer)
+		case "browser":
+			browserPlayer, _ := browser.New(conf.Browser.Port)
+			players = append(players, &browserPlayer)
+		}
 	}
-	return nil, fmt.Errorf("unknown player: \"%s\"", conf.Player)
+	if len(players) > 0 {
+		return players, nil
+	}
+
+	return nil, fmt.Errorf("unknown players: \"%s\"", conf.Players)
 }

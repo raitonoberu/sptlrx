@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"sptlrx/player"
 	"strconv"
 	"strings"
@@ -24,7 +25,7 @@ const (
 	playing
 )
 
-func New(port int) (*Client, error) {
+func New(port int) (player.Player, error) {
 	c := &Client{}
 	return c, c.start(port)
 }
@@ -73,6 +74,8 @@ func (c *Client) handler(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			return
 		}
+
+		os.Stderr.WriteString("BRWSR: msg: " + string(msg) + "\n")
 		if t != websocket.MessageText || len(msg) == 0 {
 			continue
 		}
@@ -81,6 +84,8 @@ func (c *Client) handler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Client) processMessage(msg string) {
+
+	os.Stderr.WriteString("BRWSR: Recieved message" + "\n")
 	spaceIndex := strings.IndexByte(msg, ' ')
 	if spaceIndex == -1 {
 		return
@@ -140,21 +145,27 @@ func (c *Client) State() (*player.State, error) {
 	if c.state == stopped {
 		return nil, nil
 	}
+	os.Stderr.WriteString("BRWSR: Found Song" + "\n")
 
-	var query string
+	var id string
 	if c.artist != "" {
-		query = c.artist + " " + c.title
+		id = c.artist + " " + c.title
 	} else {
-		query = c.title
+		id = c.title
 	}
+
+	os.Stderr.WriteString("BRWSR: Artist" + c.artist + "\n")
+	os.Stderr.WriteString("BRWSR: Title" + c.title + "\n")
+	os.Stderr.WriteString("BRWSR: Position" + strconv.Itoa(c.position) + "\n")
 
 	position := c.position
 	if c.state != paused {
 		position += int(time.Since(c.updateTime).Milliseconds())
 	}
 	return &player.State{
-		ID:       query,
-		Query:    query,
+		ID:       id,
+		Artist:   c.artist,
+		Title:    c.title,
 		Position: position,
 		Playing:  c.state == playing,
 	}, nil
