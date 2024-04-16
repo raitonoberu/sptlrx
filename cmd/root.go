@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
+
 	"sptlrx/config"
 	"sptlrx/lyrics"
 	"sptlrx/player"
@@ -12,7 +14,6 @@ import (
 	"sptlrx/services/local"
 	"sptlrx/services/spotify"
 	"sptlrx/ui"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
@@ -50,7 +51,7 @@ var rootCmd = &cobra.Command{
 	Use:          "sptlrx",
 	Short:        "Synchronized lyrics in your terminal",
 	Long:         "A CLI app that shows time-synchronized lyrics in your terminal",
-	Version:      "v1.2.1",
+	Version:      "v1.2.2",
 	SilenceUsage: true,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
