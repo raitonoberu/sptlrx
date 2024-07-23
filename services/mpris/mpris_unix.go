@@ -5,6 +5,8 @@ package mpris
 import (
 	"sptlrx/player"
 	"strings"
+	"net/url"
+	"path/filepath"
 
 	"github.com/Pauloo27/go-mpris"
 	"github.com/godbus/dbus/v5"
@@ -77,6 +79,15 @@ func (c *Client) State() (*player.State, error) {
 	var title string
 	if t, ok := meta["xesam:title"].Value().(string); ok {
 		title = t
+	}
+
+	// In case the player uses the file name with extension as title
+	if u, ok := meta["xesam:url"].Value().(string); ok {
+		u, err := url.Parse(u)
+		if err == nil {
+			ext := filepath.Ext(u.Path)
+			title = strings.TrimSuffix(title, ext)
+		}
 	}
 
 	var artist string
