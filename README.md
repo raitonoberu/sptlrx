@@ -229,7 +229,9 @@ local:
   folder: ""
 ```
 
-If you want to use your local collection of `.lrc` files to display lyrics, specify the folder to scan. The application will use files with the most similar name. All other lyrics sources will be disabled.
+If you want to use your local collection of `.lrc` files to display lyrics, specify the folder to scan. The application will use files with the most similar name. When used in conjunction with a local player, it will first look for a file with the same path as the music file, with the extension replaced by `.lrc`.
+
+All other lyrics sources will be disabled.
 
 ## Information
 
