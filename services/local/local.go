@@ -78,7 +78,6 @@ func (c *Client) findFile(track *player.TrackMetadata) string {
 		}
 		absLyricsUri := strings.TrimSuffix(absUri, filepath.Ext(absUri)) + ".lrc"
 		if _, err := os.Stat(absLyricsUri); err == nil {
-			fmt.Print(absLyricsUri)
 			return absLyricsUri
 		}
 	}
