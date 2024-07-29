@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sptlrx/lyrics"
+	"sptlrx/player"
 	"strconv"
 	"strings"
 )
@@ -26,25 +27,32 @@ type file struct {
 }
 
 func New(folder string) (*Client, error) {
-	index, err := createIndex(folder)
+	var expandedFolder string
+	if strings.HasPrefix(folder, "~/") {
+		dirname, _ := os.UserHomeDir()
+		expandedFolder = filepath.Join(dirname, folder[2:])
+	}
+
+	index, err := createIndex(expandedFolder)
 	if err != nil {
 		return nil, err
 	}
-	return &Client{index: index}, nil
+	return &Client{folder: expandedFolder, index: index}, nil
 }
 
 // Client implements lyrics.Provider
 type Client struct {
+	folder string
 	index []*file
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
-	f := c.findFile(query)
-	if f == nil {
+func (c *Client) Lyrics(track *player.TrackMetadata) ([]lyrics.Line, error) {
+	f := c.findFile(track)
+	if f == "" {
 		return nil, nil
 	}
 
-	reader, err := os.Open(f.Path)
+	reader, err := os.Open(f)
 	if err != nil {
 		return nil, err
 	}
@@ -53,8 +61,29 @@ func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
 	return parseLrcFile(reader), nil
 }
 
-func (c *Client) findFile(query string) *file {
-	parts := splitString(query)
+func (c *Client) findFile(track *player.TrackMetadata) string {
+	if track == nil {
+		return ""
+	}
+
+	// If it is a local track, try for similarly named .lrc file first
+	if track.Uri != "" {
+		var absUri string
+		if filepath.IsAbs(track.Uri) {
+			// Uri is already absolute
+			absUri = track.Uri
+		} else {
+			// Uri is relative to local music directory
+			absUri = filepath.Join(c.folder, track.Uri)
+		}
+		absLyricsUri := strings.TrimSuffix(absUri, filepath.Ext(absUri)) + ".lrc"
+		if _, err := os.Stat(absLyricsUri); err == nil {
+			fmt.Print(absLyricsUri)
+			return absLyricsUri
+		}
+	}
+
+	parts := splitString(track.Query)
 
 	var best *file
 	var maxScore int
@@ -76,15 +105,13 @@ func (c *Client) findFile(query string) *file {
 			}
 		}
 	}
-	return best
+	if best == nil {
+		return ""
+	}
+	return best.Path
 }
 
 func createIndex(folder string) ([]*file, error) {
-	if strings.HasPrefix(folder, "~/") {
-		dirname, _ := os.UserHomeDir()
-		folder = filepath.Join(dirname, folder[2:])
-	}
-
 	index := []*file{}
 	return index, filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
 		if d == nil {

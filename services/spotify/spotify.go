@@ -33,21 +33,21 @@ func (c *Client) State() (*player.State, error) {
 	}
 
 	return &player.State{
-		ID:       "spotify:" + result.Item.ID,
+		Track:    player.TrackMetadata{ID: "spotify:" + result.Item.ID},
 		Position: result.Progress,
 		Playing:  result.Playing,
 	}, nil
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
+func (c *Client) Lyrics(track *player.TrackMetadata) ([]lyrics.Line, error) {
 	var (
 		result *lyricsapi.LyricsResult
 		err    error
 	)
-	if strings.HasPrefix(id, "spotify:") {
-		result, err = c.api.GetByID(id[8:])
+	if strings.HasPrefix(track.ID, "spotify:") {
+		result, err = c.api.GetByID(track.ID[8:])
 	} else {
-		result, err = c.api.GetByName(query)
+		result, err = c.api.GetByName(track.Query)
 	}
 
 	if err != nil {
