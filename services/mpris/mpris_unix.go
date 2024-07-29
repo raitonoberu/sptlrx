@@ -81,11 +81,14 @@ func (c *Client) State() (*player.State, error) {
 		title = t
 	}
 
+	var uri string
 	// In case the player uses the file name with extension as title
 	if u, ok := meta["xesam:url"].Value().(string); ok {
 		u, err := url.Parse(u)
 		if err == nil {
 			ext := filepath.Ext(u.Path)
+			uri = u.Path
+			// some players use filename as title when tag is absent => trim extension from title
 			title = strings.TrimSuffix(title, ext)
 		}
 	}
@@ -106,8 +109,11 @@ func (c *Client) State() (*player.State, error) {
 	}
 
 	return &player.State{
-		ID:       query, // use query as id since mpris:trackid is broken
-		Query:    query,
+		Track: player.TrackMetadata{
+			ID:    query, // use query as id since mpris:trackid is broken
+			Uri:   uri,
+			Query: query,
+		},
 		Position: int(position * 1000), // secs to ms
 		Playing:  status == mpris.PlaybackPlaying,
 	}, err

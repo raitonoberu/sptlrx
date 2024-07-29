@@ -74,8 +74,11 @@ func (c *Client) State() (*player.State, error) {
 	}
 
 	return &player.State{
-		ID:       status["songid"],
-		Query:    query,
+		Track:    player.TrackMetadata{
+			ID:    status["songid"],
+			Uri:   current["file"],
+			Query: query,
+		},
 		Playing:  status["state"] == "play",
 		Position: int(elapsed) * 1000,
 	}, nil

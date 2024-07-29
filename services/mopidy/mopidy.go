@@ -74,8 +74,10 @@ func (c *Client) State() (*player.State, error) {
 	query := artist + " " + current.Result.Name
 
 	return &player.State{
-		ID:       current.Result.URI,
-		Query:    query,
+		Track:    player.TrackMetadata{
+			ID:    current.Result.URI,
+			Query: query,
+		},
 		Position: position.Result,
 		Playing:  state.Result == "playing",
 	}, err
