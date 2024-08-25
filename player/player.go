@@ -1,5 +1,7 @@
 package player
 
+import "net/url"
+
 type Player interface {
 	State() (*State, error)
 }
@@ -7,9 +9,8 @@ type Player interface {
 type TrackMetadata struct {
 	// ID of the current track.
 	ID string
-	// URI is the path to the local music file, if it exists.
-	// May be either absolute or relative to the local music directory (configured in "local" source).
-	Uri string
+	// URI to music file, if it is known. May be a (local) relative path.
+	Uri *url.URL
 	// Query is a string that can be used to find lyrics.
 	Query string
 }

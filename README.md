@@ -235,7 +235,7 @@ local:
 
 Display lyrics from local `.lrc` files.
 
-By default, the application will look for a file that is a sibling of a local music file (e.g. local player via mpdris), i.e. with the same path, with the extension replaced by `.lrc`.
+By default, the application will look for a file that is a sibling of a local music file (e.g. local player via mpris), i.e. with the same path, with the extension replaced by `.lrc`.
 
 If the `folder` config option is set, it will additionally search for files within that folder. If the player provides a relative path to the music file (e.g. mpd), an exact match is attempted first as described above. If that fails, a best-effort search will be performed, returning a `.lrc` file in the folder (can be nested) with the most similar name.
 

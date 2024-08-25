@@ -1,6 +1,7 @@
 package mpd
 
 import (
+	"net/url"
 	"sptlrx/player"
 	"strconv"
 
@@ -73,10 +74,16 @@ func (c *Client) State() (*player.State, error) {
 		query = title
 	}
 
+	var uri *url.URL
+	u, err := url.Parse(current["file"])
+	if err == nil && u.Path != "" {
+		uri = u
+	}
+
 	return &player.State{
 		Track:    player.TrackMetadata{
 			ID:    status["songid"],
-			Uri:   current["file"],
+			Uri:   uri,
 			Query: query,
 		},
 		Playing:  status["state"] == "play",

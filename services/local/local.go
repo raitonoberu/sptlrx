@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net/url"
 	"os"
 	"path/filepath"
 	"sptlrx/lyrics"
@@ -67,26 +68,12 @@ func (c *Client) findFile(track *player.TrackMetadata) string {
 	}
 
 	// If it is a local track, try for similarly named .lrc file first
-	if track.Uri != "" {
-		var absUri string
-		if filepath.IsAbs(track.Uri) {
-			// Uri is already absolute
-			absUri = track.Uri
-		} else if c.folder != "" {
-			// Uri is relative to local music directory
-			absUri = filepath.Join(c.folder, track.Uri)
-		} else {
-			// Can not handle relative uri without folder configured
-			absUri = ""
-		}
-		if absUri != "" {
-			absLyricsUri := strings.TrimSuffix(absUri, filepath.Ext(absUri)) + ".lrc"
-			if _, err := os.Stat(absLyricsUri); err == nil {
-				return absLyricsUri
-			}
-		}
+	var exactMatch string = c.fileByLocalUri(track.Uri)
+	if exactMatch != "" {
+		return exactMatch
 	}
 
+	// Fall back to best-effort search
 	parts := splitString(track.Query)
 
 	var best *file
@@ -113,6 +100,32 @@ func (c *Client) findFile(track *player.TrackMetadata) string {
 		return ""
 	}
 	return best.Path
+}
+
+func (c *Client) fileByLocalUri(uri *url.URL) string {
+	if uri == nil {
+		return ""
+	}
+	if uri.Scheme != "file" && uri.Scheme != "" {
+		return ""
+	}
+	var absUri string
+	if filepath.IsAbs(uri.Path) {
+		// uri is already absolute
+		absUri = uri.Path
+	} else if c.folder != "" {
+		// Uri is relative to local music directory
+		absUri = filepath.Join(c.folder, uri.Path)
+	} else {
+		// Can not handle relative uri without folder configured
+		return ""
+	}
+	absLyricsUri := strings.TrimSuffix(absUri, filepath.Ext(absUri)) + ".lrc"
+	_, err := os.Stat(absLyricsUri)
+	if err != nil {
+		return ""
+	}
+	return absLyricsUri
 }
 
 func createIndex(folder string) ([]*file, error) {

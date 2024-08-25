@@ -81,13 +81,13 @@ func (c *Client) State() (*player.State, error) {
 		title = t
 	}
 
-	var uri string
+	var uri *url.URL
 	// In case the player uses the file name with extension as title
 	if u, ok := meta["xesam:url"].Value().(string); ok {
 		u, err := url.Parse(u)
-		if err == nil {
+		if err == nil && u.Path != "" {
 			ext := filepath.Ext(u.Path)
-			uri = u.Path
+			uri = u
 			// some players use filename as title when tag is absent => trim extension from title
 			title = strings.TrimSuffix(title, ext)
 		}
