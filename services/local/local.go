@@ -72,13 +72,18 @@ func (c *Client) findFile(track *player.TrackMetadata) string {
 		if filepath.IsAbs(track.Uri) {
 			// Uri is already absolute
 			absUri = track.Uri
-		} else {
+		} else if c.folder != "" {
 			// Uri is relative to local music directory
 			absUri = filepath.Join(c.folder, track.Uri)
+		} else {
+			// Can not handle relative uri without folder configured
+			absUri = ""
 		}
-		absLyricsUri := strings.TrimSuffix(absUri, filepath.Ext(absUri)) + ".lrc"
-		if _, err := os.Stat(absLyricsUri); err == nil {
-			return absLyricsUri
+		if absUri != "" {
+			absLyricsUri := strings.TrimSuffix(absUri, filepath.Ext(absUri)) + ".lrc"
+			if _, err := os.Stat(absLyricsUri); err == nil {
+				return absLyricsUri
+			}
 		}
 	}
 
@@ -112,6 +117,9 @@ func (c *Client) findFile(track *player.TrackMetadata) string {
 
 func createIndex(folder string) ([]*file, error) {
 	index := []*file{}
+	if folder == "" {
+		return index, nil
+	}
 	return index, filepath.WalkDir(folder, func(path string, d fs.DirEntry, err error) error {
 		if d == nil {
 			return fmt.Errorf("invalid path: %s", path)
