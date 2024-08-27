@@ -32,6 +32,8 @@ func New(folder string) (*Client, error) {
 	if strings.HasPrefix(folder, "~/") {
 		dirname, _ := os.UserHomeDir()
 		expandedFolder = filepath.Join(dirname, folder[2:])
+	} else {
+		expandedFolder = folder
 	}
 
 	index, err := createIndex(expandedFolder)
