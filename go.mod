@@ -6,6 +6,7 @@ require (
 	github.com/Pauloo27/go-mpris v1.4.0
 	github.com/charmbracelet/bubbletea v0.25.0
 	github.com/charmbracelet/lipgloss v0.10.0
+	github.com/coder/websocket v1.8.12
 	github.com/creasty/defaults v1.7.0
 	github.com/fhs/gompd v1.0.1
 	github.com/godbus/dbus/v5 v5.1.1-0.20230522191255-76236955d466
@@ -14,7 +15,6 @@ require (
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/term v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
-	nhooyr.io/websocket v1.8.11
 )
 
 require (

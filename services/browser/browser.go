@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"nhooyr.io/websocket"
+	"github.com/coder/websocket"
 )
 
 const helloMessage = "ADAPTER_VERSION 1.0.0;WNPRLIB_REVISION 2"
