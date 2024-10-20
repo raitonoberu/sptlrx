@@ -141,7 +141,8 @@ func loadPlayer(conf *config.Config) (player.Player, error) {
 }
 
 func loadProvider(conf *config.Config, player player.Player) (lyrics.Provider, error) {
-	if conf.Local.Folder != "" {
+	// For backwards compatibility reasons, this is auto-enabled when Folder is set
+	if conf.Local.Enabled || conf.Local.Folder != "" {
 		return local.New(conf.Local.Folder)
 	}
 	if conf.Cookie == "" {

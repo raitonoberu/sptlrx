@@ -153,8 +153,10 @@ func (c *Client) State() (*player.State, error) {
 		position += int(time.Since(c.updateTime).Milliseconds())
 	}
 	return &player.State{
-		ID:       query,
-		Query:    query,
+		Track:    player.TrackMetadata{
+			ID:       query,
+			Query:    query,
+		},
 		Position: position,
 		Playing:  c.state == playing,
 	}, nil

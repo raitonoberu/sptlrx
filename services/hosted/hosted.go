@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"sptlrx/lyrics"
+	"sptlrx/player"
 )
 
 // Host your own: https://github.com/raitonoberu/lyricsapi
@@ -20,8 +21,8 @@ type Client struct {
 	host string
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
-	var url = fmt.Sprintf("https://%s/api/lyrics?name=%s", c.host, url.QueryEscape(query))
+func (c *Client) Lyrics(track *player.TrackMetadata) ([]lyrics.Line, error) {
+	var url = fmt.Sprintf("https://%s/api/lyrics?name=%s", c.host, url.QueryEscape(track.Query))
 
 	req, _ := http.NewRequest("GET", url, nil)
 	resp, err := http.DefaultClient.Do(req)

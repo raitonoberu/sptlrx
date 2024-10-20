@@ -150,6 +150,9 @@ browser:
 
 ### Local lyrics source ###
 local:
+  # Enable the local lyrics source.
+  # For backwards compatibility reasons setting the folder also enables this source.
+  enabled: false
   # Folder for scanning .lrc files. Example: "~/Music".
   folder: ""
 ```
@@ -226,10 +229,17 @@ You need to install a [browser extension](https://wnp.keifufu.dev/extension/gett
 ```yaml
 # config.yaml
 local:
+  enabled: true
   folder: ""
 ```
 
-If you want to use your local collection of `.lrc` files to display lyrics, specify the folder to scan. The application will use files with the most similar name. All other lyrics sources will be disabled.
+Display lyrics from local `.lrc` files.
+
+By default, the application will look for a file that is a sibling of a local music file (e.g. local player via mpris), i.e. with the same path, with the extension replaced by `.lrc`.
+
+If the `folder` config option is set, it will additionally search for files within that folder. If the player provides a relative path to the music file (e.g. mpd), an exact match is attempted first as described above. If that fails, a best-effort search will be performed, returning a `.lrc` file in the folder (can be nested) with the most similar name.
+
+All other lyrics sources will be disabled.
 
 ## Information
 

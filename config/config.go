@@ -69,6 +69,7 @@ type Config struct {
 	} `yaml:"browser"`
 
 	Local struct {
+		Enabled bool `default: "false" yaml:"enabled"`
 		Folder string `yaml:"folder"`
 	} `yaml:"local"`
 }
