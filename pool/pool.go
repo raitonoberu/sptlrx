@@ -110,7 +110,7 @@ func listenPlayer(player player.Player, ch chan playerState, interval int) {
 	}
 }
 
-// getIndex is an effective alghoritm to get current line's index
+// getIndex is an effective algorithm to get current line's index
 func getIndex(position, curIndex int, lines []lyrics.Line) int {
 	if len(lines) <= 1 {
 		return 0

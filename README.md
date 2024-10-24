@@ -172,7 +172,7 @@ If you want to use Spotify as your player or lyrics source, you need to specify 
 4. Scroll down to the `Request Headers`, right click the `cookie` field and select `Copy value`.
 5. Paste it to your config.
 
-You can also set the `SPOTIFY_COOKIE` enviroment variable or pass the `--cookie` flag.
+You can also set the `SPOTIFY_COOKIE` environment variable or pass the `--cookie` flag.
 
 **TREAT YOUR COOKIE LIKE A PASSWORD AND NEVER SHARE IT**
 
@@ -219,7 +219,7 @@ browser:
   port: 8974
 ```
 
-You need to install a [browser extension](https://wnp.keifufu.dev/extension/getting-started). If you don't change the default port, no futher configuration is required. Otherwise, create a custom adapter in the extension settings. **You can only run one instance on one port.**
+You need to install a [browser extension](https://wnp.keifufu.dev/extension/getting-started). If you don't change the default port, no further configuration is required. Otherwise, create a custom adapter in the extension settings. **You can only run one instance on one port.**
 
 ### Local
 
