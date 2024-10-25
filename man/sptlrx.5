@@ -1,0 +1,77 @@
+.\" generated with Ronn-NG/v0.10.1
+.\" http://github.com/apjanke/ronn-ng/tree/0.10.1
+.TH "SPTLRX" "5" "October 2024" ""
+.SH "NAME"
+\fBsptlrx\fR \- Synchronized lyrics in your terminal
+.SH "LOCATION"
+The config file will be created at the first launch\. It is located in \fB~/\.config/sptlrx/config\.yaml\fR\. Run sptlrx \-h to see the full path\.
+.SH "SPOTIFY"
+.SS "FORMAT"
+.nf
+# config\.yaml
+cookie: [<your cookie>]
+player: spotify
+.fi
+.SS "NOTES"
+If you want to use Spotify as your player or lyrics source, you need to specify your cookie\.
+.IP "1." 4
+Open your browser\.
+.IP "2." 4
+Press F12, open the \fINetwork\fR tab and go to open\.spotify\.com\.
+.IP "3." 4
+Click on the first request to \fIopen\.spotify\.com\fR\.
+.IP "4." 4
+Scroll down to the \fIRequest Headers\fR, right click the cookie field and select Copy value\.
+.IP "5." 4
+Paste it to your config\.
+.IP "" 0
+.P
+You can also set the \fBSPOTIFY_COOKIE\fR environment variable or pass the \fB\-\-cookie\fR flag\.
+.P
+\fBTREAT YOUR COOKIE LIKE A PASSWORD AND NEVER SHARE IT!\fR
+.SH "MPD"
+.SS "FORMAT"
+.nf
+# config\.yaml
+player: mpd
+mpd:
+  address: 127\.0\.0\.1:6600
+  password: ""
+.fi
+.SH "MOPIDY"
+.SS "FORMAT"
+.nf
+# config\.yaml
+player: mopidy
+mopidy:
+  address: 127\.0\.0\.1:6680
+.fi
+.SH "MPRIS"
+.SS "FORMAT"
+.nf
+# config\.yaml
+player: mpris
+mpris:
+  players: []
+.fi
+.SS "NOTES"
+System player that supports MPRIS protocol will be used\. You can also specify a whitelist of players to use, example: \fBplayers: [rhythmbox, spotifyd, ncspot]\fR\. Run \fBplayerctl \-l\fR to get the names\.
+.SH "BROWSER"
+.SS "FORMAT"
+.nf
+# config\.yaml
+player: browser
+browser:
+  port: 8974
+.fi
+.SS "NOTES"
+You need to install a browser extension \fIhttps://wnp\.keifufu\.dev/extension/getting\-started\fR\. If you don't change the default port, no further configuration is required\. Otherwise, create a custom adapter in the extension settings\. \fBYou can only run one instance on one port\.\fR
+.SH "LOCAL"
+.SS "FORMAT"
+.nf
+# config\.yaml
+local:
+  folder: ""
+.fi
+.SS "NOTES"
+If you want to use your local collection of \fB\.lrc\fR files to display lyrics, specify the folder to scan\. The application will use files with the most similar name\. All other lyrics sources will be disabled\.
