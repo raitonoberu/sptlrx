@@ -1,7 +1,9 @@
 package lyrics
 
+import "sptlrx/player"
+
 type Provider interface {
-	Lyrics(id, query string) ([]Line, error)
+	Lyrics(track *player.TrackMetadata) ([]Line, error)
 }
 
 type Line struct {
