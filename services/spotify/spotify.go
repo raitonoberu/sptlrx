@@ -41,7 +41,7 @@ func (c *Client) State() (*player.State, error) {
 
 func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
 	var (
-		result *lyricsapi.LyricsResult
+		result []lyricsapi.LyricsLine
 		err    error
 	)
 	if strings.HasPrefix(id, "spotify:") {
@@ -53,12 +53,12 @@ func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
 	if err != nil {
 		return nil, err
 	}
-	if result == nil || len(result.Lyrics.Lines) == 0 {
+	if len(result) == 0 {
 		return nil, nil
 	}
 
-	lines := make([]lyrics.Line, len(result.Lyrics.Lines))
-	for i, l := range result.Lyrics.Lines {
+	lines := make([]lyrics.Line, len(result))
+	for i, l := range result {
 		lines[i] = lyrics.Line(l)
 	}
 	return lines, nil

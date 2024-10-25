@@ -11,7 +11,7 @@ require (
 	github.com/fhs/gompd v1.0.1
 	github.com/godbus/dbus/v5 v5.1.1-0.20230522191255-76236955d466
 	github.com/muesli/reflow v0.3.0
-	github.com/raitonoberu/lyricsapi v0.0.0-20240416172642-b6d0748007a6
+	github.com/raitonoberu/lyricsapi v0.0.0-20240719164444-d597358b35c5
 	github.com/spf13/cobra v1.8.0
 	golang.org/x/term v0.19.0
 	gopkg.in/yaml.v2 v2.4.0
