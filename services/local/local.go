@@ -7,7 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"sptlrx/lyrics"
+	"github.com/raitonoberu/sptlrx/lyrics"
 	"strconv"
 	"strings"
 )

@@ -1,6 +1,6 @@
 package main
 
-import "sptlrx/cmd"
+import "github.com/raitonoberu/sptlrx/cmd"
 
 func main() {
 	cmd.Execute()

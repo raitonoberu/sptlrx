@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"sptlrx/lyrics"
+	"github.com/raitonoberu/sptlrx/lyrics"
 )
 
 // Host your own: https://github.com/raitonoberu/lyricsapi

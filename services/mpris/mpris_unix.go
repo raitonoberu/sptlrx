@@ -3,7 +3,7 @@
 package mpris
 
 import (
-	"sptlrx/player"
+	"github.com/raitonoberu/sptlrx/player"
 	"strings"
 	"net/url"
 	"path/filepath"

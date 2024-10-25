@@ -5,7 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
-	"sptlrx/player"
+	"github.com/raitonoberu/sptlrx/player"
 	"strconv"
 	"strings"
 	"sync"

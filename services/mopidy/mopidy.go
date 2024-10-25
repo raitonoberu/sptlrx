@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"sptlrx/player"
+	"github.com/raitonoberu/sptlrx/player"
 )
 
 func New(address string) *Client {
