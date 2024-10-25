@@ -1,4 +1,4 @@
-module sptlrx
+module github.com/raitonoberu/sptlrx
 
 go 1.18
 
