@@ -3,8 +3,8 @@ package spotify
 import (
 	"strings"
 
-	"sptlrx/lyrics"
-	"sptlrx/player"
+	"github.com/raitonoberu/sptlrx/lyrics"
+	"github.com/raitonoberu/sptlrx/player"
 
 	lyricsapi "github.com/raitonoberu/lyricsapi/lyrics"
 )

@@ -1,9 +1,9 @@
 package pool
 
 import (
-	"sptlrx/config"
-	"sptlrx/lyrics"
-	"sptlrx/player"
+	"github.com/raitonoberu/sptlrx/config"
+	"github.com/raitonoberu/sptlrx/lyrics"
+	"github.com/raitonoberu/sptlrx/player"
 	"time"
 )
 

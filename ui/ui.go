@@ -3,9 +3,9 @@ package ui
 import (
 	"os"
 	"runtime"
-	"sptlrx/config"
-	"sptlrx/lyrics"
-	"sptlrx/pool"
+	"github.com/raitonoberu/sptlrx/config"
+	"github.com/raitonoberu/sptlrx/lyrics"
+	"github.com/raitonoberu/sptlrx/pool"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"

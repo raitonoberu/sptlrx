@@ -4,7 +4,7 @@ package mpris
 
 import (
 	"errors"
-	"sptlrx/player"
+	"github.com/raitonoberu/sptlrx/player"
 )
 
 func New(players []string) (*Client, error) {

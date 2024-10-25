@@ -1,7 +1,7 @@
 package mpd
 
 import (
-	"sptlrx/player"
+	"github.com/raitonoberu/sptlrx/player"
 	"strconv"
 
 	"github.com/fhs/gompd/mpd"
