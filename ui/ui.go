@@ -2,6 +2,7 @@ package ui
 
 import (
 	"os"
+	"fmt"
 	"runtime"
 	"sptlrx/config"
 	"sptlrx/lyrics"
@@ -53,6 +54,10 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 
 	case pool.Update:
 		m.state = msg
+
+		// set sptlrx window title
+		windowTitle := m.state.ID + " - sptlrx"
+		fmt.Print("\033]0;" + windowTitle + "\007")
 
 		if runtime.GOOS == "windows" {
 			w, h, err := term.GetSize(int(os.Stdout.Fd()))
