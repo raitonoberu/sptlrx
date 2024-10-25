@@ -113,7 +113,15 @@ func (m *Model) View() string {
 		)
 	}
 	if len(m.state.Lines) == 0 {
-		return ""
+        placeholder := "<Song Name - Singer>" + "\n\nNo lyrics found"
+
+        return gloss.PlaceVertical(
+            m.h, gloss.Center,
+            m.styleAfter.
+                Align(gloss.Center).
+                Width(m.w).
+                Render( placeholder ),
+        )
 	}
 
 	curLine := m.styleCurrent.
