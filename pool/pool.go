@@ -13,6 +13,8 @@ type Update struct {
 	Index   int
 	Playing bool
 
+	// ID of the current track.
+	ID string
 	Err error
 }
 
@@ -83,6 +85,7 @@ func Listen(
 				Index:   index,
 				Playing: state.Playing,
 				Err:     state.Err,
+				ID: 	 state.ID,
 			}
 		}
 	}
