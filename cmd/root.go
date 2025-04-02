@@ -20,12 +20,12 @@ import (
 )
 
 const banner = `
-             _    _             
+             _    _
  ___  _ __  | |_ | | _ __ __  __
 / __|| '_ \ | __|| || '__|\ \/ /
-\__ \| |_) || |_ | || |    >  < 
+\__ \| |_) || |_ | || |    >  <
 |___/| .__/  \__||_||_|   /_/\_\
-     |_|                        
+     |_|
 `
 
 const help = `  1. Open your browser.
@@ -51,7 +51,7 @@ var rootCmd = &cobra.Command{
 	Use:          "sptlrx",
 	Short:        "Synchronized lyrics in your terminal",
 	Long:         "A CLI app that shows time-synchronized lyrics in your terminal",
-	Version:      "v1.2.2",
+	Version:      "v1.2.3",
 	SilenceUsage: true,
 
 	RunE: func(cmd *cobra.Command, args []string) error {
