@@ -4,9 +4,9 @@ package mpris
 
 import (
 	"github.com/raitonoberu/sptlrx/player"
-	"strings"
 	"net/url"
 	"path/filepath"
+	"strings"
 
 	"github.com/Pauloo27/go-mpris"
 	"github.com/godbus/dbus/v5"

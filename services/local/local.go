@@ -3,11 +3,11 @@ package local
 import (
 	"bufio"
 	"fmt"
+	"github.com/raitonoberu/sptlrx/lyrics"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"github.com/raitonoberu/sptlrx/lyrics"
 	"strconv"
 	"strings"
 )

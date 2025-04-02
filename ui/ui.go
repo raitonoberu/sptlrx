@@ -1,11 +1,11 @@
 package ui
 
 import (
-	"os"
-	"runtime"
 	"github.com/raitonoberu/sptlrx/config"
 	"github.com/raitonoberu/sptlrx/lyrics"
 	"github.com/raitonoberu/sptlrx/pool"
+	"os"
+	"runtime"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"

@@ -2,14 +2,14 @@ package config
 
 import (
 	"fmt"
-	"os"
-	"path"
 	"github.com/raitonoberu/sptlrx/player"
 	"github.com/raitonoberu/sptlrx/services/browser"
 	"github.com/raitonoberu/sptlrx/services/mopidy"
 	"github.com/raitonoberu/sptlrx/services/mpd"
 	"github.com/raitonoberu/sptlrx/services/mpris"
 	"github.com/raitonoberu/sptlrx/services/spotify"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -124,7 +124,7 @@ type Style struct {
 
 	Bold          bool `yaml:"bold"`
 	Italic        bool `yaml:"italic"`
-	Underline      bool `yaml:"underline"`
+	Underline     bool `yaml:"underline"`
 	Strikethrough bool `yaml:"strikethrough"`
 	Blink         bool `yaml:"blink"`
 	Faint         bool `yaml:"faint"`

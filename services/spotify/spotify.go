@@ -3,24 +3,23 @@ package spotify
 import (
 	"strings"
 
+	"github.com/raitonoberu/lyricsapi/spotify"
 	"github.com/raitonoberu/sptlrx/lyrics"
 	"github.com/raitonoberu/sptlrx/player"
-
-	lyricsapi "github.com/raitonoberu/lyricsapi/lyrics"
 )
 
-var ErrInvalidCookie = lyricsapi.ErrInvalidCookie
+var ErrInvalidCookie = spotify.ErrInvalidCookie
 
 func New(cookie string) (*Client, error) {
 	if cookie == "" {
 		return nil, ErrInvalidCookie
 	}
-	return &Client{lyricsapi.NewLyricsApi(cookie)}, nil
+	return &Client{spotify.NewClient(cookie)}, nil
 }
 
 // Client implements both player.Player and lyrics.Provider
 type Client struct {
-	api *lyricsapi.LyricsApi
+	api *spotify.Client
 }
 
 func (c *Client) State() (*player.State, error) {
@@ -41,7 +40,7 @@ func (c *Client) State() (*player.State, error) {
 
 func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
 	var (
-		result []lyricsapi.LyricsLine
+		result []spotify.LyricsLine
 		err    error
 	)
 	if strings.HasPrefix(id, "spotify:") {

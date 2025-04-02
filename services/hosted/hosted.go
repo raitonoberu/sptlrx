@@ -3,9 +3,9 @@ package hosted
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/raitonoberu/sptlrx/lyrics"
 	"net/http"
 	"net/url"
-	"github.com/raitonoberu/sptlrx/lyrics"
 )
 
 // Host your own: https://github.com/raitonoberu/lyricsapi

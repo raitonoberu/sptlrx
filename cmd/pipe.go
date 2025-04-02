@@ -2,10 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
+
 	"github.com/raitonoberu/sptlrx/config"
 	"github.com/raitonoberu/sptlrx/lyrics"
 	"github.com/raitonoberu/sptlrx/pool"
-	"strings"
 
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/muesli/reflow/wrap"

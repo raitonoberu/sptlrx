@@ -1,8 +1,8 @@
 package pool
 
 import (
-	"math"
 	"github.com/raitonoberu/sptlrx/services/hosted"
+	"math"
 	"testing"
 )
 

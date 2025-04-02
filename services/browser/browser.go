@@ -2,10 +2,10 @@ package browser
 
 import (
 	"fmt"
+	"github.com/raitonoberu/sptlrx/player"
 	"io"
 	"net"
 	"net/http"
-	"github.com/raitonoberu/sptlrx/player"
 	"strconv"
 	"strings"
 	"sync"
