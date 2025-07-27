@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"go.toolsManagement.checkForUpdates": "local",
+		"go.useLanguageServer": true,
+		"files.associations": {
+			"*.go": "go",
+			"*.mod": "go.mod",
+			"*.sum": "go.sum"
+		}
+	}
+}
