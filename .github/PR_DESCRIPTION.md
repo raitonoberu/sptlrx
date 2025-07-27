@@ -13,18 +13,21 @@ This PR implements the foundational architecture for **sptlrx V2** as outlined i
 ## ✨ Key Features
 
 ### 🏗️ **V2-Ready Modular Architecture**
+
 - **Multi-source lyrics manager** with priority and fallback system
 - **Pluggable provider interface** for easy extension
 - **Modular UI status management** replacing inline logic
 - **Comprehensive error handling** and timeout management
 
 ### 🎵 **LRCLib Integration**
+
 - **Complete LRC format parser** with metadata support
 - **Multi-timestamp handling** for chorus/repeated sections
 - **Free API integration** (https://lrclib.net) - no authentication required
 - **Robust error handling** for API failures and malformed data
 
 ### 🧪 **Quality Assurance**
+
 - **Comprehensive test suite** (293 lines of tests)
 - **Benchmark tests** showing ~23μs parsing performance
 - **Edge case handling** for malformed LRC files
@@ -37,6 +40,7 @@ This PR implements the foundational architecture for **sptlrx V2** as outlined i
 ```
 
 ### 📁 **New Components:**
+
 - `services/lrclib/` - Complete LRCLib client with parser
 - `services/sources/` - Multi-source manager (V2-ready)
 - `ui/status.go` - Modular status management
@@ -46,6 +50,7 @@ This PR implements the foundational architecture for **sptlrx V2** as outlined i
 ## 🔧 Technical Details
 
 ### **LRC Parser Features:**
+
 - ✅ Standard LRC timestamp parsing (`[mm:ss.xx]`)
 - ✅ Metadata extraction (`[ti:title]`, `[ar:artist]`, etc.)
 - ✅ Multi-timestamp support (`[00:12.34][00:45.67]Same line`)
@@ -53,6 +58,7 @@ This PR implements the foundational architecture for **sptlrx V2** as outlined i
 - ✅ Validation and error reporting
 
 ### **Multi-Source Architecture:**
+
 ```go
 // Easy to add new sources
 manager := sources.NewManager()
@@ -63,6 +69,7 @@ lyrics, err := manager.GetLyrics(songID, query)
 ```
 
 ### **Status Management:**
+
 ```go
 // Modular status handling (fixes #55)
 statusManager := NewStatusManager(config)
@@ -76,7 +83,7 @@ display := statusManager.RenderStatus(state)
 # All tests pass
 go test ./services/lrclib/ -v
 === RUN   TestSimpleLRCParse
-=== RUN   TestValidateLRC  
+=== RUN   TestValidateLRC
 === RUN   TestParseTimedLyric
 === RUN   TestLRCLibClient_convertToLines
 --- PASS: All tests (0.008s)
@@ -90,6 +97,7 @@ BenchmarkValidateLRC-20      261807     4742 ns/op
 ## 🚧 Implementation Status
 
 ### ✅ **Completed:**
+
 - [x] LRCLib client with complete API integration
 - [x] Robust LRC format parser with edge case handling
 - [x] Multi-source manager with priority system
@@ -98,6 +106,7 @@ BenchmarkValidateLRC-20      261807     4742 ns/op
 - [x] V2-ready architecture foundation
 
 ### 🔄 **Next Steps (Future PRs):**
+
 - [ ] Integration with main sptlrx flow
 - [ ] Configuration system for source priorities
 - [ ] Additional lyrics sources (Genius, Musixmatch, etc.)
@@ -125,7 +134,7 @@ go run cmd/test_integration/main.go
 # Clean modular structure
 services/
 ├── lrclib/          # LRCLib implementation
-├── sources/         # Multi-source manager  
+├── sources/         # Multi-source manager
 └── README_V2_ARCHITECTURE.md
 
 ui/
