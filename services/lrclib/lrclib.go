@@ -158,25 +158,25 @@ func (c *Client) convertToLines(response *LRCLibResponse) ([]lyrics.Line, error)
 func parseAsPlainText(plainText string) []lyrics.Line {
 	lines := strings.Split(plainText, "\n")
 	result := make([]lyrics.Line, 0, len(lines))
-	
+
 	currentTime := 0
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
 		}
-		
+
 		result = append(result, lyrics.Line{
 			Time:  currentTime,
 			Words: line,
 		})
-		
+
 		// Estimate 3 seconds per line for plain text
 		currentTime += 3000
 	}
-	
+
 	return result
-}// TrackInfo holds track information for API requests
+} // TrackInfo holds track information for API requests
 type TrackInfo struct {
 	Artist   string
 	Track    string
@@ -193,12 +193,12 @@ func parseQuery(query string) (TrackInfo, error) {
 	if len(parts) != 4 {
 		return TrackInfo{}, ErrInvalidParams
 	}
-	
+
 	duration, err := strconv.Atoi(parts[3])
 	if err != nil {
 		duration = 0 // fallback
 	}
-	
+
 	return TrackInfo{
 		Artist:   parts[0],
 		Track:    parts[1],

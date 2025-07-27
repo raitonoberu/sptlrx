@@ -69,27 +69,27 @@ No timestamps here`,
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := SimpleLRCParse(tt.input)
-			
+
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("Expected error but got none")
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
 				return
 			}
-			
+
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d lines, got %d", len(tt.expected), len(result))
 				return
 			}
-			
+
 			for i, line := range result {
 				if line.Time != tt.expected[i].Time || line.Words != tt.expected[i].Words {
-					t.Errorf("Line %d: expected {%d, %q}, got {%d, %q}", 
+					t.Errorf("Line %d: expected {%d, %q}, got {%d, %q}",
 						i, tt.expected[i].Time, tt.expected[i].Words, line.Time, line.Words)
 				}
 			}
@@ -178,15 +178,15 @@ func TestParseTimedLyric(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := parseTimedLyric(tt.input)
-			
+
 			if len(result) != len(tt.expected) {
 				t.Errorf("Expected %d pairs, got %d", len(tt.expected), len(result))
 				return
 			}
-			
+
 			for i, pair := range result {
 				if pair.time != tt.expected[i].time || pair.text != tt.expected[i].text {
-					t.Errorf("Pair %d: expected {%v, %q}, got {%v, %q}", 
+					t.Errorf("Pair %d: expected {%v, %q}, got {%v, %q}",
 						i, tt.expected[i].time, tt.expected[i].text, pair.time, pair.text)
 				}
 			}
@@ -196,7 +196,7 @@ func TestParseTimedLyric(t *testing.T) {
 
 func TestLRCLibClient_convertToLines(t *testing.T) {
 	client := NewClient()
-	
+
 	tests := []struct {
 		name     string
 		response *LRCLibResponse
@@ -237,19 +237,19 @@ func TestLRCLibClient_convertToLines(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result, err := client.convertToLines(tt.response)
-			
+
 			if tt.wantErr {
 				if err == nil {
 					t.Errorf("Expected error but got none")
 				}
 				return
 			}
-			
+
 			if err != nil {
 				t.Errorf("Unexpected error: %v", err)
 				return
 			}
-			
+
 			if len(result) == 0 {
 				t.Errorf("Expected some lyrics lines, got none")
 			}
