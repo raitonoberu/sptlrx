@@ -1,0 +1,21 @@
+cookie: ""
+player: mpris
+host: lyricsapi.vercel.app
+ignoreErrors: true
+timerInterval: 200
+updateInterval: 2000
+
+lrclib:
+  enabled: true
+
+style:
+  hAlignment: center
+  before:
+    bold: true
+  current:
+    bold: true
+  after:
+    faint: true
+
+local:
+  folder: ""

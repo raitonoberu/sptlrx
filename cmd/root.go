@@ -10,8 +10,12 @@ import (
 	"github.com/raitonoberu/sptlrx/lyrics"
 	"github.com/raitonoberu/sptlrx/player"
 	"github.com/raitonoberu/sptlrx/pool"
+	"github.com/raitonoberu/sptlrx/services/genius"
 	"github.com/raitonoberu/sptlrx/services/hosted"
 	"github.com/raitonoberu/sptlrx/services/local"
+	"github.com/raitonoberu/sptlrx/services/lrclib"
+	"github.com/raitonoberu/sptlrx/services/musixmatch"
+	"github.com/raitonoberu/sptlrx/services/sources"
 	"github.com/raitonoberu/sptlrx/services/spotify"
 	"github.com/raitonoberu/sptlrx/ui"
 
@@ -141,18 +145,62 @@ func loadPlayer(conf *config.Config) (player.Player, error) {
 }
 
 func loadProvider(conf *config.Config, player player.Player) (lyrics.Provider, error) {
+	// Create multi-source manager
+	manager := sources.NewManager()
+
+	// Priority 1: Local files (if configured)
 	if conf.Local.Folder != "" {
-		return local.New(conf.Local.Folder)
+		localProvider, err := local.New(conf.Local.Folder)
+		if err == nil {
+			manager.AddSource(sources.SourceLocal, localProvider, 10, true)
+		}
 	}
-	if conf.Cookie == "" {
-		return hosted.New(conf.Host), nil
+
+	// Priority 2: LRCLib (if enabled - default)
+	if conf.LRCLib.Enabled {
+		lrclibProvider := lrclib.New()
+		manager.AddSource(sources.SourceLRCLib, lrclibProvider, 20, true)
 	}
-	if spt, ok := player.(*spotify.Client); ok {
-		// use existing spotify client
-		return spt, nil
+
+	// Priority 3: Genius (if enabled and token available)
+	if conf.Genius.Enabled && conf.Genius.AccessToken != "" {
+		geniusProvider := genius.New(conf.Genius.AccessToken)
+		manager.AddSource(sources.SourceGenius, geniusProvider, 30, true)
 	}
-	// create new spotify client
-	return spotify.New(conf.Cookie)
+
+	// Priority 4: MusixMatch (if enabled and API key available)
+	if conf.MusixMatch.Enabled && conf.MusixMatch.APIKey != "" {
+		musixmatchProvider := musixmatch.New(conf.MusixMatch.APIKey)
+		manager.AddSource(sources.SourceMusixMatch, musixmatchProvider, 40, true)
+	}
+
+	// Priority 5: Spotify (if cookie available)
+	if conf.Cookie != "" {
+		var spotifyProvider lyrics.Provider
+		if spt, ok := player.(*spotify.Client); ok {
+			// use existing spotify client
+			spotifyProvider = spt
+		} else {
+			// create new spotify client
+			var err error
+			spotifyProvider, err = spotify.New(conf.Cookie)
+			if err != nil {
+				// If Spotify fails, continue with other sources
+				if errors.Is(err, spotify.ErrInvalidCookie) {
+					fmt.Println("Warning: Invalid Spotify cookie, skipping Spotify lyrics source")
+				}
+			}
+		}
+		if spotifyProvider != nil {
+			manager.AddSource(sources.SourceSpotify, spotifyProvider, 50, true)
+		}
+	}
+
+	// Priority 6: Hosted API (always available as fallback)
+	hostedProvider := hosted.New(conf.Host)
+	manager.AddSource(sources.SourceHosted, hostedProvider, 60, true)
+
+	return manager, nil
 }
 
 func parseStyleFlag(value string) config.Style {

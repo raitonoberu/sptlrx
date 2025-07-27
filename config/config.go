@@ -2,16 +2,17 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"strconv"
+	"strings"
+
 	"github.com/raitonoberu/sptlrx/player"
 	"github.com/raitonoberu/sptlrx/services/browser"
 	"github.com/raitonoberu/sptlrx/services/mopidy"
 	"github.com/raitonoberu/sptlrx/services/mpd"
 	"github.com/raitonoberu/sptlrx/services/mpris"
 	"github.com/raitonoberu/sptlrx/services/spotify"
-	"os"
-	"path"
-	"strconv"
-	"strings"
 
 	gloss "github.com/charmbracelet/lipgloss"
 	"github.com/creasty/defaults"
@@ -68,9 +69,31 @@ type Config struct {
 		Port int `default:"8974" yaml:"port"`
 	} `yaml:"browser"`
 
+	LRCLib struct {
+		Enabled bool `default:"true" yaml:"enabled"`
+	} `yaml:"lrclib"`
+
 	Local struct {
 		Folder string `yaml:"folder"`
 	} `yaml:"local"`
+
+	Genius struct {
+		Enabled     bool   `default:"false" yaml:"enabled"`
+		AccessToken string `yaml:"accessToken"`
+	} `yaml:"genius"`
+
+	MusixMatch struct {
+		Enabled bool   `default:"false" yaml:"enabled"`
+		APIKey  string `yaml:"apiKey"`
+	} `yaml:"musixmatch"`
+
+	Sources struct {
+		CacheEnabled  bool `default:"true" yaml:"cacheEnabled"`
+		CacheTTL      int  `default:"3600" yaml:"cacheTTL"` // seconds
+		MaxCacheSize  int  `default:"1000" yaml:"maxCacheSize"`
+		SourceTimeout int  `default:"10" yaml:"sourceTimeout"` // seconds
+		EnableHealth  bool `default:"true" yaml:"enableHealth"`
+	} `yaml:"sources"`
 }
 
 func New() *Config {
