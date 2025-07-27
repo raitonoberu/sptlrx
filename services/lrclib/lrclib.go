@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/raitonoberu/sptlrx/lyrics"
@@ -143,11 +144,39 @@ func (c *Client) convertToLines(response *LRCLibResponse) ([]lyrics.Line, error)
 		return nil, ErrTrackNotFound
 	}
 
-	// Parse LRC format to lyrics.Line
-	return parseLRCFormat(lyricsText), nil
+	// Use our robust LRC parser
+	if response.SyncedLyrics != "" {
+		// Parse as LRC format
+		return SimpleLRCParse(lyricsText)
+	} else {
+		// Handle plain text lyrics
+		return parseAsPlainText(lyricsText), nil
+	}
 }
 
-// TrackInfo holds track information for API requests
+// parseAsPlainText converts plain text lyrics to timed lines
+func parseAsPlainText(plainText string) []lyrics.Line {
+	lines := strings.Split(plainText, "\n")
+	result := make([]lyrics.Line, 0, len(lines))
+	
+	currentTime := 0
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		
+		result = append(result, lyrics.Line{
+			Time:  currentTime,
+			Words: line,
+		})
+		
+		// Estimate 3 seconds per line for plain text
+		currentTime += 3000
+	}
+	
+	return result
+}// TrackInfo holds track information for API requests
 type TrackInfo struct {
 	Artist   string
 	Track    string
@@ -159,17 +188,21 @@ type TrackInfo struct {
 // TODO: In V2, this would be a more sophisticated metadata structure
 func parseQuery(query string) (TrackInfo, error) {
 	// Simplified parsing - in real implementation this would be more robust
-	// For now, return empty to avoid compilation errors
-	// This would be implemented based on how the player provides track info
-	return TrackInfo{}, ErrInvalidParams
-}
-
-// parseLRCFormat converts LRC format string to lyrics.Line slice
-func parseLRCFormat(lrcText string) []lyrics.Line {
-	// TODO: Implement LRC parsing
-	// This is a placeholder - real implementation would parse [mm:ss.xx] format
-	lines := []lyrics.Line{
-		{Time: 0, Words: "LRCLib integration in progress..."},
+	// Expected format: "artist|track|album|duration"
+	parts := strings.Split(query, "|")
+	if len(parts) != 4 {
+		return TrackInfo{}, ErrInvalidParams
 	}
-	return lines
+	
+	duration, err := strconv.Atoi(parts[3])
+	if err != nil {
+		duration = 0 // fallback
+	}
+	
+	return TrackInfo{
+		Artist:   parts[0],
+		Track:    parts[1],
+		Album:    parts[2],
+		Duration: duration,
+	}, nil
 }
