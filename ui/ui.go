@@ -1,12 +1,12 @@
 package ui
 
 import (
+	"os"
+	"runtime"
+
 	"github.com/raitonoberu/sptlrx/config"
 	"github.com/raitonoberu/sptlrx/lyrics"
 	"github.com/raitonoberu/sptlrx/pool"
-	"os"
-	"runtime"
-	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
@@ -103,89 +103,9 @@ func (m *Model) View() string {
 	if m.w < 1 || m.h < 1 {
 		return ""
 	}
-	if m.state.Err != nil && !m.Config.IgnoreErrors {
-		return gloss.PlaceVertical(
-			m.h, gloss.Center,
-			m.styleCurrent.
-				Align(gloss.Center).
-				Width(m.w).
-				Render(m.state.Err.Error()),
-		)
-	}
-	if len(m.state.Lines) == 0 {
-		return ""
-	}
 
-	curLine := m.styleCurrent.
-		Width(m.w).
-		Align(m.hAlignment).
-		Render(m.state.Lines[m.state.Index].Words)
-	curLines := strings.Split(curLine, "\n")
-
-	curLen := len(curLines)
-	beforeLen := (m.h - curLen) / 2
-	afterLen := m.h - beforeLen - curLen
-
-	lines := make([]string, beforeLen+curLen+afterLen)
-
-	// fill lines before current
-	var filledBefore int
-	var beforeIndex = m.state.Index - 1
-	for filledBefore < beforeLen {
-		index := beforeLen - filledBefore - 1
-		if index < 0 || beforeIndex < 0 {
-			filledBefore += 1
-			continue
-		}
-		line := m.styleBefore.
-			Width(m.w).
-			Align(m.hAlignment).
-			Render(m.state.Lines[beforeIndex].Words)
-		beforeIndex -= 1
-		beforeLines := strings.Split(line, "\n")
-		for i := len(beforeLines) - 1; i >= 0; i-- {
-			lineIndex := index - i
-			if lineIndex >= 0 {
-				lines[lineIndex] = beforeLines[len(beforeLines)-1-i]
-			}
-			filledBefore += 1
-		}
-	}
-
-	// fill current lines
-	var curIndex = beforeLen
-	for i, line := range curLines {
-		index := curIndex + i
-		if index >= 0 && index < len(lines) {
-			lines[index] = line
-		}
-	}
-
-	// fill lines after current
-	var filledAfter int
-	var afterIndex = m.state.Index + 1
-	for filledAfter < afterLen {
-		index := beforeLen + curLen + filledAfter
-		if index >= len(lines) || afterIndex >= len(m.state.Lines) {
-			filledAfter += 1
-			continue
-		}
-		line := m.styleAfter.
-			Width(m.w).
-			Align(m.hAlignment).
-			Render(m.state.Lines[afterIndex].Words)
-		afterIndex += 1
-		afterLines := strings.Split(line, "\n")
-		for i, line := range afterLines {
-			lineIndex := index + i
-			if lineIndex < len(lines) {
-				lines[lineIndex] = line
-			}
-			filledAfter += 1
-		}
-	}
-
-	return gloss.JoinVertical(m.hAlignment, lines...)
+	// Use modular status management (V2-ready architecture)
+	return m.ViewWithStatusManager()
 }
 
 func waitForUpdate(ch chan pool.Update) tea.Cmd {
