@@ -1,12 +1,13 @@
 package ui
 
 import (
-	"github.com/raitonoberu/sptlrx/config"
-	"github.com/raitonoberu/sptlrx/lyrics"
-	"github.com/raitonoberu/sptlrx/pool"
 	"os"
 	"runtime"
 	"strings"
+
+	"github.com/raitonoberu/sptlrx/config"
+	"github.com/raitonoberu/sptlrx/lyrics"
+	"github.com/raitonoberu/sptlrx/pool"
 
 	tea "github.com/charmbracelet/bubbletea"
 	gloss "github.com/charmbracelet/lipgloss"
@@ -113,7 +114,13 @@ func (m *Model) View() string {
 		)
 	}
 	if len(m.state.Lines) == 0 {
-		return ""
+		return gloss.PlaceVertical(
+			m.h, gloss.Center,
+			m.styleCurrent.
+				Align(gloss.Center).
+				Width(m.w).
+				Render("No lyrics found for this song"),
+		)
 	}
 
 	curLine := m.styleCurrent.
