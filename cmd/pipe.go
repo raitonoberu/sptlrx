@@ -26,7 +26,7 @@ var pipeCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("couldn't load player: %w", err)
 		}
-		provider, err := loadProvider(conf, player)
+		provider, err := loadProvider(conf)
 		if err != nil {
 			return fmt.Errorf("couldn't load provider: %w", err)
 		}

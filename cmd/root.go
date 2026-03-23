@@ -10,9 +10,8 @@ import (
 	"github.com/raitonoberu/sptlrx/lyrics"
 	"github.com/raitonoberu/sptlrx/player"
 	"github.com/raitonoberu/sptlrx/pool"
-	"github.com/raitonoberu/sptlrx/services/hosted"
 	"github.com/raitonoberu/sptlrx/services/local"
-	"github.com/raitonoberu/sptlrx/services/spotify"
+	"github.com/raitonoberu/sptlrx/services/lrclib"
 	"github.com/raitonoberu/sptlrx/ui"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -28,14 +27,9 @@ const banner = `
      |_|
 `
 
-const help = `  1. Open your browser.
-  2. Press F12, open the 'Network' tab and go to open.spotify.com.
-  3. Click on the first request to open.spotify.com.
-  4. Scroll down to the 'Request Headers', right click the 'cookie' field and select 'Copy value'.
-  5. Paste it into your config file.`
+const help = `TODO: add instructions on how to login to Spotify`
 
 var (
-	FlagCookie string
 	FlagPlayer string
 	FlagConfig string
 
@@ -63,7 +57,7 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("couldn't load player: %w", err)
 		}
-		provider, err := loadProvider(conf, player)
+		provider, err := loadProvider(conf)
 		if err != nil {
 			return fmt.Errorf("couldn't load provider: %w", err)
 		}
@@ -100,12 +94,6 @@ func loadConfig(cmd *cobra.Command) (*config.Config, error) {
 		config.Save(conf)
 	}
 
-	if envCookie := os.Getenv("SPOTIFY_COOKIE"); envCookie != "" {
-		conf.Cookie = envCookie
-	}
-	if FlagCookie != "" {
-		conf.Cookie = FlagCookie
-	}
 	if FlagVerbose {
 		conf.IgnoreErrors = false
 	}
@@ -131,28 +119,16 @@ func loadConfig(cmd *cobra.Command) (*config.Config, error) {
 func loadPlayer(conf *config.Config) (player.Player, error) {
 	player, err := config.GetPlayer(conf)
 	if err != nil {
-		if errors.Is(err, spotify.ErrInvalidCookie) {
-			fmt.Println("If you want to use Spotify as your player, you need to set up your cookie.")
-			fmt.Println(help)
-		}
 		return nil, err
 	}
 	return player, nil
 }
 
-func loadProvider(conf *config.Config, player player.Player) (lyrics.Provider, error) {
+func loadProvider(conf *config.Config) (lyrics.Provider, error) {
 	if conf.Local.Folder != "" {
 		return local.New(conf.Local.Folder)
 	}
-	if conf.Cookie == "" {
-		return hosted.New(conf.Host), nil
-	}
-	if spt, ok := player.(*spotify.Client); ok {
-		// use existing spotify client
-		return spt, nil
-	}
-	// create new spotify client
-	return spotify.New(conf.Cookie)
+	return lrclib.New(), nil
 }
 
 func parseStyleFlag(value string) config.Style {
@@ -183,7 +159,6 @@ func parseStyleFlag(value string) config.Style {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&FlagCookie, "cookie", "c", "", "your cookie")
 	rootCmd.PersistentFlags().StringVarP(&FlagPlayer, "player", "p", "spotify", "what player to use")
 	rootCmd.PersistentFlags().StringVar(&FlagConfig, "config", config.Path, "path to config file")
 

@@ -68,12 +68,8 @@ Config file will be created at the first launch. On Linux it's located in `~/.co
 
 ```yaml
 ### Global settings ###
-# Your Spotify cookie. Only needed if you are going to use Spotify as a player.
-cookie: ""
 # Player that will be used. Possible values: spotify, mpd, mopidy, mpris.
 player: spotify
-# Host of lyrics API to be used in case the cookie is not provided.
-host: lyricsapi.vercel.app
 # Whether to ignore errors instead of showing them.
 ignoreErrors: true
 # Interval of the internal timer. Determines how often the terminal will be updated.
@@ -160,21 +156,10 @@ local:
 
 ```yaml
 # config.yaml
-cookie: <your cookie>
 player: spotify
 ```
 
-If you want to use Spotify as your player or lyrics source, you need to specify your cookie.
-
-1. Open your browser.
-2. Press F12, open the `Network` tab and go to [open.spotify.com](https://open.spotify.com/).
-3. Click on the first request to `open.spotify.com`.
-4. Scroll down to the `Request Headers`, right click the `cookie` field and select `Copy value`.
-5. Paste it to your config.
-
-You can also set the `SPOTIFY_COOKIE` environment variable or pass the `--cookie` flag.
-
-**TREAT YOUR COOKIE LIKE A PASSWORD AND NEVER SHARE IT**
+TODO: add instructions on how to login to Spotify
 
 ### MPD
 
@@ -235,7 +220,7 @@ If you want to use your local collection of `.lrc` files to display lyrics, spec
 
 ### Source
 
-If you specify your Spotify cookie, the lyrics will be fetched using your account. Otherwise, the API [hosted by me](https://github.com/raitonoberu/lyricsapi) will be used. It is also possible to host your own API or use local `.lrc` files.
+Primary source is [lrclib.net](https://lrclib.net). It is also possible to use local `.lrc` files.
 
 ### Piping
 
