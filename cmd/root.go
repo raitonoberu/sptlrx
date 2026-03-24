@@ -27,8 +27,6 @@ const banner = `
      |_|
 `
 
-const help = `TODO: add instructions on how to login to Spotify`
-
 var (
 	FlagPlayer string
 	FlagConfig string
@@ -170,6 +168,7 @@ func init() {
 	rootCmd.PersistentFlags().BoolVarP(&FlagVerbose, "verbose", "v", false, "force print errors")
 
 	rootCmd.AddCommand(pipeCmd)
+	rootCmd.AddCommand(loginCmd)
 }
 
 func Execute() {

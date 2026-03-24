@@ -28,7 +28,7 @@ func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
 	url := searchUrl + url.Values{
 		"q": {query},
 	}.Encode()
-	req, err := http.NewRequest(http.MethodGet, url, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

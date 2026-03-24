@@ -4,6 +4,7 @@ go 1.26.1
 
 require (
 	github.com/Pauloo27/go-mpris v1.4.0
+	github.com/adrg/xdg v0.5.3
 	github.com/charmbracelet/bubbletea v1.3.10
 	github.com/charmbracelet/lipgloss v1.1.0
 	github.com/coder/websocket v1.8.14
@@ -11,6 +12,7 @@ require (
 	github.com/fhs/gompd v1.0.1
 	github.com/godbus/dbus/v5 v5.2.2
 	github.com/muesli/reflow v0.3.0
+	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/spf13/cobra v1.10.2
 	golang.org/x/term v0.41.0
 	gopkg.in/yaml.v2 v2.4.0
