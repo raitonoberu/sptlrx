@@ -10,10 +10,7 @@ import (
 	"github.com/raitonoberu/sptlrx/lyrics"
 )
 
-const (
-	searchUrl = "https://lrclib.net/api/search?"
-	userAgent = "sptlrx v1.0.0 (https://github.com/raitonoberu/sptlrx)"
-)
+const userAgent = "sptlrx v1.0.0 (https://github.com/raitonoberu/sptlrx)"
 
 func New() *Client {
 	return &Client{}
@@ -25,13 +22,14 @@ type Client struct {
 
 // Client implements lyrics.Provider
 func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
-	url := searchUrl + url.Values{
+	url := "https://lrclib.net/api/search?" + url.Values{
 		"q": {query},
 	}.Encode()
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := c.http.Do(req)
 	if err != nil {
