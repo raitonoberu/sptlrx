@@ -1,32 +1,29 @@
-sptlrx(5) -- Synchronized lyrics in your terminal
-====
+sptlrx 5
+========
 
 ## LOCATION
 
 The config file will be created at the first launch. It is located in `~/.config/sptlrx/config.yaml`. Run sptlrx -h to see the full path.
 
-## SPOTIFY 
+## SPOTIFY
 
 ### FORMAT
 ```
 # config.yaml
-cookie: [<your cookie>]
 player: spotify
 ```
 
 ### NOTES
 
-If you want to use Spotify as your player or lyrics source, you need to specify your cookie.
+If you want to use Spotify as your player, you will need to log in first.
 
-1. Open your browser.
-2. Press F12, open the *Network* tab and go to open.spotify.com.
-3. Click on the first request to *open.spotify.com*.
-4. Scroll down to the *Request Headers*, right click the cookie field and select Copy value.
-5. Paste it to your config.
+1. Go to [developer.spotify.com](https://developer.spotify.com/dashboard), create a new app, and set the redirect URI to `http://127.0.0.1:8888/callback`. Grab your Client ID and Client Secret.
+2. Run `sptlrx login`. You must pass Client ID and Client Secret in one of two ways:
+  - As environmental variables: `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
+  - As CLI parameters: `--client-id` and `--client-secret`
+3. Spotify login page will open. Log in and wait for the success message.
 
-You can also set the `SPOTIFY_COOKIE` environment variable or pass the `--cookie` flag.
-
-**TREAT YOUR COOKIE LIKE A PASSWORD AND NEVER SHARE IT!**
+You only need to do this once. Your credentials will then be saved to `$XDG_STATE_HOME/sptlrx/spotify-auth.json`.
 
 ## MPD
 
