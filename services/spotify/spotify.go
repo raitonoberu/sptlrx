@@ -43,7 +43,6 @@ func (c *Client) State() (*player.State, error) {
 
 	resp, err := c.http.Do(req)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	defer resp.Body.Close()
