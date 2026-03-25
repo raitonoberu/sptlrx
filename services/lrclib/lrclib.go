@@ -1,11 +1,13 @@
 package lrclib
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/raitonoberu/sptlrx/lyrics"
 )
@@ -22,10 +24,13 @@ type Client struct {
 
 // Client implements lyrics.Provider
 func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	url := "https://lrclib.net/api/search?" + url.Values{
 		"q": {query},
 	}.Encode()
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

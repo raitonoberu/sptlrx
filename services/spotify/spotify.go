@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/raitonoberu/sptlrx/player"
 	"github.com/raitonoberu/sptlrx/services/spotify/auth"
@@ -33,12 +34,15 @@ type Client struct {
 }
 
 func (c *Client) State() (*player.State, error) {
-	token, err := c.auth.GetToken(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	token, err := c.auth.GetToken(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	req, _ := http.NewRequest("GET", "https://api.spotify.com/v1/me/player/currently-playing", nil)
+	req, _ := http.NewRequestWithContext(ctx, "GET", "https://api.spotify.com/v1/me/player/currently-playing", nil)
 	req.Header.Add("Authorization", "Bearer "+token)
 
 	resp, err := c.http.Do(req)
