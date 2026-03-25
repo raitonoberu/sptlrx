@@ -23,41 +23,21 @@
 
 - Arch Linux ([@BachoSeven](https://github.com/BachoSeven))
 
-```
+```sh
 yay -S sptlrx-bin
 ```
 
 - NixOS ([@MoritzBoehme](https://github.com/MoritzBoehme))
 
-```
+```sh
 nix-env -iA nixos.sptlrx
-```
-
-or if using nixpkgs
-
-```
+# or if using nixpkgs
 nix-env -iA nixpkgs.sptlrx
 ```
 
-- Other
+**Windows**, **MacOS** & **Other**
 
-```
-curl -sSL instl.sh/raitonoberu/sptlrx/linux | bash
-```
-
-**Windows**
-
-```
-iwr instl.sh/raitonoberu/sptlrx/windows | iex
-```
-
-**macOS**
-
-```
-curl -sSL instl.sh/raitonoberu/sptlrx/macos | bash
-```
-
-You can also download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page or [build it yourself](./building.md).
+Download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page or [build it yourself](./building.md).
 
 ## Configuration
 
