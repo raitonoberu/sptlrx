@@ -1,64 +1,95 @@
 package spotify
 
 import (
-	"strings"
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/http"
+	"os"
+	"time"
 
-	"github.com/raitonoberu/lyricsapi/spotify"
-	"github.com/raitonoberu/sptlrx/lyrics"
 	"github.com/raitonoberu/sptlrx/player"
+	"github.com/raitonoberu/sptlrx/services/spotify/auth"
 )
 
-var ErrInvalidCookie = spotify.ErrInvalidCookie
-
-func New(cookie string) (*Client, error) {
-	if cookie == "" {
-		return nil, ErrInvalidCookie
+func New() (*Client, error) {
+	auth, err := auth.Load()
+	if errors.Is(err, os.ErrNotExist) {
+		err = errors.New("you must run `sptlrx login` first to use Spotify as a player")
 	}
-	return &Client{spotify.NewClient(cookie)}, nil
-}
-
-// Client implements both player.Player and lyrics.Provider
-type Client struct {
-	api *spotify.Client
-}
-
-func (c *Client) State() (*player.State, error) {
-	result, err := c.api.State()
 	if err != nil {
 		return nil, err
 	}
-	if result == nil || result.Item == nil {
-		return nil, nil
-	}
 
-	return &player.State{
-		ID:       "spotify:" + result.Item.ID,
-		Position: result.Progress,
-		Playing:  result.Playing,
+	return &Client{
+		auth: auth,
 	}, nil
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
-	var (
-		result []spotify.LyricsLine
-		err    error
-	)
-	if strings.HasPrefix(id, "spotify:") {
-		result, err = c.api.GetByID(id[8:])
-	} else {
-		result, err = c.api.GetByName(query)
-	}
+// Client implements player.Player
+type Client struct {
+	auth *auth.Auth
+	http http.Client
+}
 
+func (c *Client) State() (*player.State, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	token, err := c.auth.GetToken(ctx)
 	if err != nil {
 		return nil, err
 	}
-	if len(result) == 0 {
+
+	req, _ := http.NewRequestWithContext(ctx, "GET", "https://api.spotify.com/v1/me/player/currently-playing", nil)
+	req.Header.Add("Authorization", "Bearer "+token)
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNoContent {
 		return nil, nil
 	}
 
-	lines := make([]lyrics.Line, len(result))
-	for i, l := range result {
-		lines[i] = lyrics.Line(l)
+	if resp.StatusCode >= 400 {
+		return nil, fmt.Errorf("status code %d", resp.StatusCode)
 	}
-	return lines, nil
+
+	var state state
+	if err := json.NewDecoder(resp.Body).Decode(&state); err != nil {
+		return nil, err
+	}
+
+	query := ""
+	for _, a := range state.Item.Artists {
+		query += a.Name + " "
+	}
+	query += state.Item.Name
+
+	return &player.State{
+		ID:       state.Item.ID,
+		Query:    query,
+		Position: state.ProgressMs,
+		Playing:  state.IsPlaying,
+	}, nil
+}
+
+type state struct {
+	IsPlaying  bool  `json:"is_playing"`
+	ProgressMs int   `json:"progress_ms"`
+	Item       track `json:"item"`
+}
+
+type track struct {
+	ID      string        `json:"id"`
+	Name    string        `json:"name"`
+	Artists []trackArtist `json:"artists"`
+}
+
+type trackArtist struct {
+	Name string `json:"name"`
 }

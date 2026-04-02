@@ -1,8 +1,9 @@
 package mpd
 
 import (
-	"github.com/raitonoberu/sptlrx/player"
 	"strconv"
+
+	"github.com/raitonoberu/sptlrx/player"
 
 	"github.com/fhs/gompd/mpd"
 )
@@ -77,6 +78,6 @@ func (c *Client) State() (*player.State, error) {
 		ID:       status["songid"],
 		Query:    query,
 		Playing:  status["state"] == "play",
-		Position: int(elapsed) * 1000,
+		Position: int(elapsed * 1000), // secs to ms
 	}, nil
 }

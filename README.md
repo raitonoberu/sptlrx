@@ -23,41 +23,21 @@
 
 - Arch Linux ([@BachoSeven](https://github.com/BachoSeven))
 
-```
+```sh
 yay -S sptlrx-bin
 ```
 
 - NixOS ([@MoritzBoehme](https://github.com/MoritzBoehme))
 
-```
+```sh
 nix-env -iA nixos.sptlrx
-```
-
-or if using nixpkgs
-
-```
+# or if using nixpkgs
 nix-env -iA nixpkgs.sptlrx
 ```
 
-- Other
+**Windows**, **MacOS** & **Other**
 
-```
-curl -sSL instl.sh/raitonoberu/sptlrx/linux | bash
-```
-
-**Windows**
-
-```
-iwr instl.sh/raitonoberu/sptlrx/windows | iex
-```
-
-**macOS**
-
-```
-curl -sSL instl.sh/raitonoberu/sptlrx/macos | bash
-```
-
-You can also download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page or [build it yourself](./building.md).
+Download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page or [build it yourself](./building.md).
 
 ## Configuration
 
@@ -68,12 +48,8 @@ Config file will be created at the first launch. On Linux it's located in `~/.co
 
 ```yaml
 ### Global settings ###
-# Your Spotify cookie. Only needed if you are going to use Spotify as a player.
-cookie: ""
 # Player that will be used. Possible values: spotify, mpd, mopidy, mpris.
 player: spotify
-# Host of lyrics API to be used in case the cookie is not provided.
-host: lyricsapi.vercel.app
 # Whether to ignore errors instead of showing them.
 ignoreErrors: true
 # Interval of the internal timer. Determines how often the terminal will be updated.
@@ -160,21 +136,18 @@ local:
 
 ```yaml
 # config.yaml
-cookie: <your cookie>
 player: spotify
 ```
 
-If you want to use Spotify as your player or lyrics source, you need to specify your cookie.
+If you want to use Spotify as your player, you will need to log in first.
 
-1. Open your browser.
-2. Press F12, open the `Network` tab and go to [open.spotify.com](https://open.spotify.com/).
-3. Click on the first request to `open.spotify.com`.
-4. Scroll down to the `Request Headers`, right click the `cookie` field and select `Copy value`.
-5. Paste it to your config.
+1. Go to [developer.spotify.com](https://developer.spotify.com/dashboard), create a new app, and set the redirect URI to `http://127.0.0.1:8888/callback`. Grab your Client ID and Client Secret.
+2. Run `sptlrx login`. You must pass Client ID and Client Secret in one of two ways:
+  - As environmental variables: `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
+  - As CLI parameters: `--client-id` and `--client-secret`
+3. Spotify login page will open. Log in and wait for the success message.
 
-You can also set the `SPOTIFY_COOKIE` environment variable or pass the `--cookie` flag.
-
-**TREAT YOUR COOKIE LIKE A PASSWORD AND NEVER SHARE IT**
+You only need to do this once. Your credentials will then be saved to `$XDG_STATE_HOME/sptlrx/spotify-auth.json`.
 
 ### MPD
 
@@ -235,7 +208,7 @@ If you want to use your local collection of `.lrc` files to display lyrics, spec
 
 ### Source
 
-If you specify your Spotify cookie, the lyrics will be fetched using your account. Otherwise, the API [hosted by me](https://github.com/raitonoberu/lyricsapi) will be used. It is also possible to host your own API or use local `.lrc` files.
+Primary source is [lrclib.net](https://lrclib.net). It is also possible to use local `.lrc` files.
 
 ### Piping
 

@@ -1,13 +1,14 @@
 package pool
 
 import (
-	"github.com/raitonoberu/sptlrx/services/hosted"
 	"math"
 	"testing"
+
+	"github.com/raitonoberu/sptlrx/services/lrclib"
 )
 
 func TestGetIndex(t *testing.T) {
-	service := hosted.New("lyricsapi.vercel.app")
+	service := lrclib.New()
 	lines, err := service.Lyrics("", "Death Grips No Love")
 	if err != nil {
 		t.Fatal(err)

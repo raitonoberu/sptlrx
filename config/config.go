@@ -2,24 +2,27 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"strconv"
+	"strings"
+
 	"github.com/raitonoberu/sptlrx/player"
 	"github.com/raitonoberu/sptlrx/services/browser"
 	"github.com/raitonoberu/sptlrx/services/mopidy"
 	"github.com/raitonoberu/sptlrx/services/mpd"
 	"github.com/raitonoberu/sptlrx/services/mpris"
 	"github.com/raitonoberu/sptlrx/services/spotify"
-	"os"
-	"path"
-	"strconv"
-	"strings"
 
 	gloss "github.com/charmbracelet/lipgloss"
 	"github.com/creasty/defaults"
 	"gopkg.in/yaml.v2"
 )
 
-var Directory string
-var Path string
+var (
+	Directory string
+	Path      string
+)
 
 func init() {
 	d, err := os.UserConfigDir()
@@ -31,9 +34,7 @@ func init() {
 }
 
 type Config struct {
-	Cookie         string `yaml:"cookie"`
 	Player         string `default:"spotify" yaml:"player"`
-	Host           string `default:"lyricsapi.vercel.app" yaml:"host"`
 	IgnoreErrors   bool   `default:"true" yaml:"ignoreErrors"`
 	TimerInterval  int    `default:"200" yaml:"timerInterval"`
 	UpdateInterval int    `default:"2000" yaml:"updateInterval"`
@@ -74,7 +75,7 @@ type Config struct {
 }
 
 func New() *Config {
-	var config = &Config{}
+	config := &Config{}
 	defaults.Set(config)
 	return config
 }
@@ -86,7 +87,7 @@ func Load() (*Config, error) {
 	}
 	defer file.Close()
 
-	var config = &Config{}
+	config := &Config{}
 	err = yaml.NewDecoder(file).Decode(config)
 	return config, err
 }
@@ -176,7 +177,7 @@ func validateColor(color string) bool {
 func GetPlayer(conf *Config) (player.Player, error) {
 	switch conf.Player {
 	case "spotify":
-		return spotify.New(conf.Cookie)
+		return spotify.New()
 	case "mpd":
 		return mpd.New(conf.Mpd.Address, conf.Mpd.Password), nil
 	case "mopidy":
