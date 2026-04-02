@@ -21,5 +21,11 @@ builds:
       - goos: windows
         goarch: arm
 
+archives:
+  - files:
+      - README.md
+      - LICENSE
+      - man/sptlrx.5
+
 checksum:
   name_template: "checksums.txt"
