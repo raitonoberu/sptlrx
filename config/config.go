@@ -72,6 +72,11 @@ type Config struct {
 	Local struct {
 		Folder string `yaml:"folder"`
 	} `yaml:"local"`
+
+	Spotify struct {
+		ClientId     string `yaml:"client-id"`
+		ClientSecret string `yaml:"client-secret"`
+	} `yaml:"spotify"`
 }
 
 func New() *Config {
@@ -177,7 +182,7 @@ func validateColor(color string) bool {
 func GetPlayer(conf *Config) (player.Player, error) {
 	switch conf.Player {
 	case "spotify":
-		return spotify.New()
+		return spotify.New(conf)
 	case "mpd":
 		return mpd.New(conf.Mpd.Address, conf.Mpd.Password), nil
 	case "mopidy":

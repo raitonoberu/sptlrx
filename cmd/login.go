@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/pkg/browser"
+	"github.com/raitonoberu/sptlrx/config"
 	"github.com/raitonoberu/sptlrx/services/spotify/auth"
 	"github.com/spf13/cobra"
 )
@@ -22,11 +23,26 @@ var loginCmd = &cobra.Command{
 	Short: "Login to Spotify",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Load config to check for credentials
+		conf, err := config.Load()
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		// Priority: flags -> config -> env vars
 		if FlagClientId == "" {
-			FlagClientId = os.Getenv("SPOTIFY_CLIENT_ID")
+			if conf != nil && conf.Spotify.ClientId != "" {
+				FlagClientId = conf.Spotify.ClientId
+			} else {
+				FlagClientId = os.Getenv("SPOTIFY_CLIENT_ID")
+			}
 		}
 		if FlagClientSecret == "" {
-			FlagClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
+			if conf != nil && conf.Spotify.ClientSecret != "" {
+				FlagClientSecret = conf.Spotify.ClientSecret
+			} else {
+				FlagClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
+			}
 		}
 
 		if FlagClientId == "" || FlagClientSecret == "" {

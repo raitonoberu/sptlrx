@@ -13,7 +13,7 @@ import (
 	"github.com/raitonoberu/sptlrx/services/spotify/auth"
 )
 
-func New() (*Client, error) {
+func New(conf interface{}) (*Client, error) {
 	auth, err := auth.Load()
 	if errors.Is(err, os.ErrNotExist) {
 		err = errors.New("you must run `sptlrx login` first to use Spotify as a player")
