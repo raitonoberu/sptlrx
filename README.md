@@ -137,14 +137,22 @@ local:
 ```yaml
 # config.yaml
 player: spotify
+spotify:
+  client-id: "your-id"
+  client-secret: "your-secret"
+  # or use commands
+  # client-id-cmd: "pass get spotify/client-id"
+  # client-secret-cmd: "pass get spotify/client-secret"
 ```
 
 If you want to use Spotify as your player, you will need to log in first.
 
 1. Go to [developer.spotify.com](https://developer.spotify.com/dashboard), create a new app, and set the redirect URI to `http://127.0.0.1:8888/callback`. Grab your Client ID and Client Secret.
-2. Run `sptlrx login`. You must pass Client ID and Client Secret in one of two ways:
-  - As environmental variables: `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
-  - As CLI parameters: `--client-id` and `--client-secret`
+2. Run `sptlrx login`. You can provide credentials in one of four ways (in order of priority):
+  - CLI parameters: `--client-id` and `--client-secret`
+  - Config commands: `client-id-cmd` and `client-secret-cmd` (executed in shell)
+  - Config values: `client-id` and `client-secret`
+  - Environment variables: `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
 3. Spotify login page will open. Log in and wait for the success message.
 
 You only need to do this once. Your credentials will then be saved to `$XDG_STATE_HOME/sptlrx/spotify-auth.json`.
