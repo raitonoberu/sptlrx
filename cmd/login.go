@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pkg/browser"
 	"github.com/raitonoberu/sptlrx/services/spotify/auth"
@@ -30,7 +32,35 @@ var loginCmd = &cobra.Command{
 		}
 
 		if FlagClientId == "" || FlagClientSecret == "" {
-			return errors.New("client_id and client_secret must be provided")
+			fmt.Println("Credentials not supplied or incomplete.")
+			fmt.Println("Use 'sptlrx login -h' for more info.")
+			fmt.Println("You may now enter your missing credentials.\n")
+
+			reader := bufio.NewReader(os.Stdin)
+
+			if FlagClientId == "" {
+				fmt.Print("Enter spotify client ID: ")
+				clientId, err := reader.ReadString('\n')
+				if err != nil {
+					return fmt.Errorf("failed to read client id: %w", err)
+				}
+				FlagClientId = strings.TrimSpace(clientId)
+			}
+
+			if FlagClientSecret == "" {
+				fmt.Print("Enter spotify client secret: ")
+				clientSecret, err := reader.ReadString('\n')
+				if err != nil {
+					return fmt.Errorf("failed to read client secret: %w", err)
+				}
+				FlagClientSecret = strings.TrimSpace(clientSecret)
+			}
+
+			fmt.Println()
+		}
+
+		if FlagClientId == "" || FlagClientSecret == "" {
+			return errors.New("client_id and client_secret are required")
 		}
 
 		auth := auth.New(FlagClientId, FlagClientSecret)
@@ -57,5 +87,5 @@ func init() {
 	loginCmd.Flags().StringVar(&FlagClientId, "client-id", "", "spotify client id")
 	loginCmd.Flags().StringVar(&FlagClientSecret, "client-secret", "", "spotify client secret")
 
-	rootCmd.AddCommand(pipeCmd)
+	rootCmd.AddCommand(loginCmd)
 }
