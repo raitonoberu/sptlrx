@@ -98,16 +98,12 @@ func (c *Client) State() (*player.State, error) {
 		artist = strings.Join(a.([]string), " ")
 	}
 
-	var query string
-	if artist != "" {
-		query = artist + " " + title
-	} else {
-		query = title
-	}
+	id := artist + " " + title
 
 	return &player.State{
-		ID:       query, // use query as id since mpris:trackid is broken
-		Query:    query,
+		ID:       id, // use artist+title as id since mpris:trackid is broken
+		Artist:   artist,
+		Track:    title,
 		Position: int(position * 1000), // secs to ms
 		Playing:  status == mpris.PlaybackPlaying,
 	}, err

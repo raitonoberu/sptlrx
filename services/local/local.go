@@ -3,13 +3,14 @@ package local
 import (
 	"bufio"
 	"fmt"
-	"github.com/raitonoberu/sptlrx/lyrics"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/raitonoberu/sptlrx/lyrics"
 )
 
 var replacer = strings.NewReplacer(
@@ -38,7 +39,8 @@ type Client struct {
 	index []*file
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
+func (c *Client) Lyrics(artist, track string) ([]lyrics.Line, error) {
+	query := artist + " " + track
 	f := c.findFile(query)
 	if f == nil {
 		return nil, nil
@@ -115,7 +117,7 @@ func parseLrcFile(reader io.Reader) []lyrics.Line {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if !strings.HasPrefix(line, "[") || len(line) < 10 {
+		if !isTimestampLine(line) {
 			continue
 		}
 		result = append(result, parseLrcLine(line))
@@ -123,14 +125,40 @@ func parseLrcFile(reader io.Reader) []lyrics.Line {
 	return result
 }
 
+// isTimestampLine checks if a line starts with a timestamp like [00:17.12]
+func isTimestampLine(line string) bool {
+	if len(line) < 10 {
+		return false
+	}
+	return line[0] == '[' &&
+		line[3] == ':' &&
+		line[6] == '.' &&
+		line[1] >= '0' && line[1] <= '9' &&
+		line[2] >= '0' && line[2] <= '9'
+}
+
 func parseLrcLine(line string) lyrics.Line {
-	// [00:00.00]text -> {"time": 0, "words": "text"}
+	// [00:00.00]text or [00:00.000] text
 	h, _ := strconv.Atoi(line[1:3])
 	m, _ := strconv.Atoi(line[4:6])
-	s, _ := strconv.Atoi(line[7:9])
+
+	closeBracket := strings.IndexByte(line, ']')
+
+	msStr := line[7:closeBracket]
+	ms, _ := strconv.Atoi(msStr)
+	if len(msStr) == 2 {
+		ms *= 10
+	} else if len(msStr) == 1 {
+		ms *= 100
+	}
+
+	words := line[closeBracket+1:]
+	if strings.HasPrefix(words, " ") {
+		words = words[1:]
+	}
 
 	return lyrics.Line{
-		Time:  h*60*1000 + m*1000 + s*10,
-		Words: line[10:],
+		Time:  h*60*1000 + m*1000 + ms,
+		Words: words,
 	}
 }

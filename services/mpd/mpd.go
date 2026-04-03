@@ -67,16 +67,10 @@ func (c *Client) State() (*player.State, error) {
 		artist = a
 	}
 
-	var query string
-	if artist != "" {
-		query = artist + " " + title
-	} else {
-		query = title
-	}
-
 	return &player.State{
 		ID:       status["songid"],
-		Query:    query,
+		Artist:   artist,
+		Track:    title,
 		Playing:  status["state"] == "play",
 		Position: int(elapsed * 1000), // secs to ms
 	}, nil

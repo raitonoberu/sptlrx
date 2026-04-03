@@ -23,14 +23,58 @@ type Client struct {
 }
 
 // Client implements lyrics.Provider
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
+func (c *Client) Lyrics(artist, track string) ([]lyrics.Line, error) {
+	// try /api/get first (exact match, no caching issues)
+	lines, err := c.get(artist, track)
+	if err == nil && lines != nil {
+		return lines, nil
+	}
+
+	// fallback to /api/search
+	return c.search(artist + " " + track)
+}
+
+func (c *Client) get(artist, track string) ([]lyrics.Line, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	url := "https://lrclib.net/api/search?" + url.Values{
+	u := "https://lrclib.net/api/get?" + url.Values{
+		"artist_name": {artist},
+		"track_name":  {track},
+	}.Encode()
+	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", userAgent)
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, nil
+	}
+
+	var response lrclibTrack
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseTrack(response), nil
+}
+
+func (c *Client) search(query string) ([]lyrics.Line, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	u := "https://lrclib.net/api/search?" + url.Values{
 		"q": {query},
 	}.Encode()
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", u, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +105,7 @@ type lrclibTrack struct {
 
 func parseTrack(t lrclibTrack) []lyrics.Line {
 	if t.SyncedLyrics != "" {
-		return parceSynced(t)
+		return parseSynced(t)
 	}
 	if t.PlainLyrics != "" {
 		return parsePlain(t)
@@ -69,11 +113,14 @@ func parseTrack(t lrclibTrack) []lyrics.Line {
 	return nil
 }
 
-func parceSynced(r lrclibTrack) []lyrics.Line {
+func parseSynced(r lrclibTrack) []lyrics.Line {
 	lines := strings.Split(r.SyncedLyrics, "\n")
-	result := make([]lyrics.Line, len(lines))
-	for i, line := range lines {
-		result[i] = parseLrcLine(line)
+	result := make([]lyrics.Line, 0, len(lines))
+	for _, line := range lines {
+		if !isTimestampLine(line) {
+			continue
+		}
+		result = append(result, parseLrcLine(line))
 	}
 	return result
 }
@@ -87,16 +134,40 @@ func parsePlain(r lrclibTrack) []lyrics.Line {
 	return result
 }
 
-func parseLrcLine(line string) lyrics.Line {
-	// "[00:17.12] whatever"
-	if len(line) < 11 {
-		return lyrics.Line{}
+// isTimestampLine checks if a line starts with a timestamp like [00:17.12]
+func isTimestampLine(line string) bool {
+	if len(line) < 10 {
+		return false
 	}
+	return line[0] == '[' &&
+		line[3] == ':' &&
+		line[6] == '.' &&
+		line[1] >= '0' && line[1] <= '9' &&
+		line[2] >= '0' && line[2] <= '9'
+}
+
+func parseLrcLine(line string) lyrics.Line {
+	// "[00:17.12] text" or "[00:17.123]text"
 	m, _ := strconv.Atoi(line[1:3])
 	s, _ := strconv.Atoi(line[4:6])
-	ms, _ := strconv.Atoi(line[7:9])
+
+	closeBracket := strings.IndexByte(line, ']')
+
+	msStr := line[7:closeBracket]
+	ms, _ := strconv.Atoi(msStr)
+	if len(msStr) == 2 {
+		ms *= 10
+	} else if len(msStr) == 1 {
+		ms *= 100
+	}
+
+	words := line[closeBracket+1:]
+	if strings.HasPrefix(words, " ") {
+		words = words[1:]
+	}
+
 	return lyrics.Line{
-		Time:  m*60*1000 + s*1000 + ms*10,
-		Words: line[11:],
+		Time:  m*60*1000 + s*1000 + ms,
+		Words: words,
 	}
 }

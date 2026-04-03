@@ -64,15 +64,18 @@ func (c *Client) State() (*player.State, error) {
 		return nil, err
 	}
 
-	query := ""
-	for _, a := range state.Item.Artists {
-		query += a.Name + " "
+	artist := ""
+	for i, a := range state.Item.Artists {
+		if i != 0 {
+			artist += " "
+		}
+		artist += a.Name
 	}
-	query += state.Item.Name
 
 	return &player.State{
 		ID:       state.Item.ID,
-		Query:    query,
+		Artist:   artist,
+		Track:    state.Item.Name,
 		Position: state.ProgressMs,
 		Playing:  state.IsPlaying,
 	}, nil

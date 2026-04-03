@@ -9,7 +9,7 @@ import (
 
 func TestGetIndex(t *testing.T) {
 	service := lrclib.New()
-	lines, err := service.Lyrics("", "Death Grips No Love")
+	lines, err := service.Lyrics("Death Grips", "No Love")
 	if err != nil {
 		t.Fatal(err)
 	}

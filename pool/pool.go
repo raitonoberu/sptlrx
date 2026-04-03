@@ -47,7 +47,7 @@ func Listen(
 			if newState.ID != state.ID {
 				changed = true
 				if newState.ID != "" {
-					newLines, err := provider.Lyrics(newState.ID, newState.Query)
+					newLines, err := provider.Lyrics(newState.Artist, newState.Track)
 					if err != nil {
 						state.Err = err
 					}
@@ -100,7 +100,8 @@ func listenPlayer(player player.Player, ch chan playerState, interval int) {
 		st := playerState{Err: err}
 		if state != nil {
 			st.ID = state.ID
-			st.Query = state.Query
+			st.Artist = state.Artist
+			st.Track = state.Track
 			st.Playing = state.Playing
 			st.Position = state.Position
 		}

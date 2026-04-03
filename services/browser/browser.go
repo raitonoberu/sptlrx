@@ -141,20 +141,16 @@ func (c *Client) State() (*player.State, error) {
 		return nil, nil
 	}
 
-	var query string
-	if c.artist != "" {
-		query = c.artist + " " + c.title
-	} else {
-		query = c.title
-	}
+	id := c.artist + " " + c.title
 
 	position := c.position
 	if c.state != paused {
 		position += int(time.Since(c.updateTime).Milliseconds())
 	}
 	return &player.State{
-		ID:       query,
-		Query:    query,
+		ID:       id,
+		Artist:   c.artist,
+		Track:    c.title,
 		Position: position,
 		Playing:  c.state == playing,
 	}, nil

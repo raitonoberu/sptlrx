@@ -1,7 +1,7 @@
 package lyrics
 
 type Provider interface {
-	Lyrics(id, query string) ([]Line, error)
+	Lyrics(artist, track string) ([]Line, error)
 }
 
 type Line struct {
