@@ -74,8 +74,10 @@ type Config struct {
 	} `yaml:"local"`
 
 	Spotify struct {
-		ClientId     string `yaml:"client-id"`
-		ClientSecret string `yaml:"client-secret"`
+		ClientId      string `yaml:"client-id"`
+		ClientSecret  string `yaml:"client-secret"`
+		ClientIdCmd   string `yaml:"client-id-cmd"`
+		ClientSecretCmd string `yaml:"client-secret-cmd"`
 	} `yaml:"spotify"`
 }
 

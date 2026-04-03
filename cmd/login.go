@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/pkg/browser"
 	"github.com/raitonoberu/sptlrx/config"
@@ -18,38 +20,71 @@ var (
 	FlagClientSecret string
 )
 
+// executeCommand runs a shell command and returns its trimmed output
+func executeCommand(cmd string) (string, error) {
+	if cmd == "" {
+		return "", nil
+	}
+
+	out, err := exec.Command("sh", "-c", cmd).Output()
+	if err != nil {
+		return "", fmt.Errorf("failed to execute command: %w", err)
+	}
+
+	return strings.TrimSpace(string(out)), nil
+}
+
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Login to Spotify",
 
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Load config to check for credentials
 		conf, err := config.Load()
 		if err != nil && !os.IsNotExist(err) {
 			return err
 		}
 
-		// Priority: flags -> config -> env vars
-		if FlagClientId == "" {
-			if conf != nil && conf.Spotify.ClientId != "" {
-				FlagClientId = conf.Spotify.ClientId
-			} else {
-				FlagClientId = os.Getenv("SPOTIFY_CLIENT_ID")
+		// Priority: flags -> config commands -> config static values -> env vars
+		clientId := FlagClientId
+		clientSecret := FlagClientSecret
+
+		if clientId == "" && conf != nil && conf.Spotify.ClientIdCmd != "" {
+			val, err := executeCommand(conf.Spotify.ClientIdCmd)
+			if err != nil {
+				return fmt.Errorf("client-id-cmd failed: %w", err)
 			}
-		}
-		if FlagClientSecret == "" {
-			if conf != nil && conf.Spotify.ClientSecret != "" {
-				FlagClientSecret = conf.Spotify.ClientSecret
-			} else {
-				FlagClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
-			}
+			clientId = val
 		}
 
-		if FlagClientId == "" || FlagClientSecret == "" {
+		if clientId == "" && conf != nil && conf.Spotify.ClientId != "" {
+			clientId = conf.Spotify.ClientId
+		}
+
+		if clientId == "" {
+			clientId = os.Getenv("SPOTIFY_CLIENT_ID")
+		}
+
+		if clientSecret == "" && conf != nil && conf.Spotify.ClientSecretCmd != "" {
+			val, err := executeCommand(conf.Spotify.ClientSecretCmd)
+			if err != nil {
+				return fmt.Errorf("client-secret-cmd failed: %w", err)
+			}
+			clientSecret = val
+		}
+
+		if clientSecret == "" && conf != nil && conf.Spotify.ClientSecret != "" {
+			clientSecret = conf.Spotify.ClientSecret
+		}
+
+		if clientSecret == "" {
+			clientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
+		}
+
+		if clientId == "" || clientSecret == "" {
 			return errors.New("client_id and client_secret must be provided")
 		}
 
-		auth := auth.New(FlagClientId, FlagClientSecret)
+		auth := auth.New(clientId, clientSecret)
 		url := auth.GetAuthUrl(FlagPort)
 
 		fmt.Println("Login URL:", url)
