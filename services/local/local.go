@@ -152,10 +152,7 @@ func parseLrcLine(line string) lyrics.Line {
 		ms *= 100
 	}
 
-	words := line[closeBracket+1:]
-	if strings.HasPrefix(words, " ") {
-		words = words[1:]
-	}
+	words := strings.TrimSpace(line[closeBracket+1:])
 
 	return lyrics.Line{
 		Time:  h*60*1000 + m*1000 + ms,
