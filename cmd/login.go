@@ -31,32 +31,8 @@ var loginCmd = &cobra.Command{
 			FlagClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
 		}
 
-		if FlagClientId == "" || FlagClientSecret == "" {
-			fmt.Println("Credentials not supplied or incomplete.")
-			fmt.Println("Use 'sptlrx login -h' for more info.")
-			fmt.Println("You may now enter your missing credentials.\n")
-
-			reader := bufio.NewReader(os.Stdin)
-
-			if FlagClientId == "" {
-				fmt.Print("Enter spotify client ID: ")
-				clientId, err := reader.ReadString('\n')
-				if err != nil {
-					return fmt.Errorf("failed to read client id: %w", err)
-				}
-				FlagClientId = strings.TrimSpace(clientId)
-			}
-
-			if FlagClientSecret == "" {
-				fmt.Print("Enter spotify client secret: ")
-				clientSecret, err := reader.ReadString('\n')
-				if err != nil {
-					return fmt.Errorf("failed to read client secret: %w", err)
-				}
-				FlagClientSecret = strings.TrimSpace(clientSecret)
-			}
-
-			fmt.Println()
+		if err := interactiveLogin(); err != nil {
+			return err
 		}
 
 		if FlagClientId == "" || FlagClientSecret == "" {
@@ -80,6 +56,37 @@ var loginCmd = &cobra.Command{
 		fmt.Println("Success! You can use sptlrx now")
 		return nil
 	},
+}
+
+func interactiveLogin() error {
+	if FlagClientId == "" || FlagClientSecret == "" {
+		fmt.Println("Credentials not supplied or incomplete.")
+		fmt.Println("Use 'sptlrx login -h' for more info.")
+		fmt.Println("You may now enter your missing credentials.\n")
+
+		reader := bufio.NewReader(os.Stdin)
+
+		if FlagClientId == "" {
+			fmt.Print("Enter spotify client ID: ")
+			clientId, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("failed to read client id: %w", err)
+			}
+			FlagClientId = strings.TrimSpace(clientId)
+		}
+
+		if FlagClientSecret == "" {
+			fmt.Print("Enter spotify client secret: ")
+			clientSecret, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("failed to read client secret: %w", err)
+			}
+			FlagClientSecret = strings.TrimSpace(clientSecret)
+		}
+
+		fmt.Println()
+	}
+	return nil
 }
 
 func init() {
