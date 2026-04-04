@@ -86,6 +86,4 @@ func init() {
 	loginCmd.Flags().IntVar(&FlagPort, "port", 8888, "port to use for login callback")
 	loginCmd.Flags().StringVar(&FlagClientId, "client-id", "", "spotify client id")
 	loginCmd.Flags().StringVar(&FlagClientSecret, "client-secret", "", "spotify client secret")
-
-	rootCmd.AddCommand(loginCmd)
 }
