@@ -142,9 +142,10 @@ player: spotify
 If you want to use Spotify as your player, you will need to log in first.
 
 1. Go to [developer.spotify.com](https://developer.spotify.com/dashboard), create a new app, and set the redirect URI to `http://127.0.0.1:8888/callback`. Grab your Client ID and Client Secret.
-2. Run `sptlrx login`. You must pass Client ID and Client Secret in one of two ways:
+2. Run `sptlrx login`. You can pass Client ID and Client Secret in one of three ways:
   - As environmental variables: `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET`
   - As CLI parameters: `--client-id` and `--client-secret`
+  - Interactively: run `sptlrx login` without providing credentials and you will be prompted to enter them
 3. Spotify login page will open. Log in and wait for the success message.
 
 You only need to do this once. Your credentials will then be saved to `$XDG_STATE_HOME/sptlrx/spotify-auth.json`.
