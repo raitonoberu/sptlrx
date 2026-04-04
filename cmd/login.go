@@ -1,9 +1,11 @@
 package cmd
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/pkg/browser"
 	"github.com/raitonoberu/sptlrx/services/spotify/auth"
@@ -29,8 +31,12 @@ var loginCmd = &cobra.Command{
 			FlagClientSecret = os.Getenv("SPOTIFY_CLIENT_SECRET")
 		}
 
+		if err := interactiveLogin(); err != nil {
+			return err
+		}
+
 		if FlagClientId == "" || FlagClientSecret == "" {
-			return errors.New("client_id and client_secret must be provided")
+			return errors.New("client_id and client_secret are required")
 		}
 
 		auth := auth.New(FlagClientId, FlagClientSecret)
@@ -52,10 +58,35 @@ var loginCmd = &cobra.Command{
 	},
 }
 
+func interactiveLogin() error {
+	if FlagClientId == "" || FlagClientSecret == "" {
+		reader := bufio.NewReader(os.Stdin)
+
+		if FlagClientId == "" {
+			fmt.Print("Enter spotify client ID: ")
+			clientId, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("failed to read client id: %w", err)
+			}
+			FlagClientId = strings.TrimSpace(clientId)
+		}
+
+		if FlagClientSecret == "" {
+			fmt.Print("Enter spotify client secret: ")
+			clientSecret, err := reader.ReadString('\n')
+			if err != nil {
+				return fmt.Errorf("failed to read client secret: %w", err)
+			}
+			FlagClientSecret = strings.TrimSpace(clientSecret)
+		}
+
+		fmt.Println()
+	}
+	return nil
+}
+
 func init() {
 	loginCmd.Flags().IntVar(&FlagPort, "port", 8888, "port to use for login callback")
 	loginCmd.Flags().StringVar(&FlagClientId, "client-id", "", "spotify client id")
 	loginCmd.Flags().StringVar(&FlagClientSecret, "client-secret", "", "spotify client secret")
-
-	rootCmd.AddCommand(pipeCmd)
 }
