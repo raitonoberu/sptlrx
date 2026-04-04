@@ -60,10 +60,6 @@ var loginCmd = &cobra.Command{
 
 func interactiveLogin() error {
 	if FlagClientId == "" || FlagClientSecret == "" {
-		fmt.Println("Credentials not supplied or incomplete.")
-		fmt.Println("Use 'sptlrx login -h' for more info.")
-		fmt.Println("You may now enter your missing credentials.\n")
-
 		reader := bufio.NewReader(os.Stdin)
 
 		if FlagClientId == "" {
