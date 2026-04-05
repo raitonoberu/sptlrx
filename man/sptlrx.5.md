@@ -1,6 +1,10 @@
 sptlrx 5
 ========
 
+## NAME
+
+**sptlrx** - Synchronized lyrics in your terminal
+
 ## LOCATION
 
 The config file will be created at the first launch. It is located in `~/.config/sptlrx/config.yaml`. Run sptlrx -h to see the full path.
