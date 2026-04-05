@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/raitonoberu/sptlrx/player"
@@ -64,17 +65,17 @@ func (c *Client) State() (*player.State, error) {
 		return nil, err
 	}
 
-	artist := ""
+	var b strings.Builder
 	for i, a := range state.Item.Artists {
 		if i != 0 {
-			artist += " "
+			b.WriteByte(' ')
 		}
-		artist += a.Name
+		b.WriteString(a.Name)
 	}
 
 	return &player.State{
 		ID:       state.Item.ID,
-		Artist:   artist,
+		Artist:   b.String(),
 		Track:    state.Item.Name,
 		Position: state.ProgressMs,
 		Playing:  state.IsPlaying,

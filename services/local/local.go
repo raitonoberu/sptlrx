@@ -7,7 +7,6 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/raitonoberu/sptlrx/lyrics"
@@ -117,45 +116,10 @@ func parseLrcFile(reader io.Reader) []lyrics.Line {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if !isTimestampLine(line) {
+		if !lyrics.IsTimestampLine(line) {
 			continue
 		}
-		result = append(result, parseLrcLine(line))
+		result = append(result, lyrics.ParseLrcLine(line))
 	}
 	return result
-}
-
-// isTimestampLine checks if a line starts with a timestamp like [00:17.12]
-func isTimestampLine(line string) bool {
-	if len(line) < 10 {
-		return false
-	}
-	return line[0] == '[' &&
-		line[3] == ':' &&
-		line[6] == '.' &&
-		line[1] >= '0' && line[1] <= '9' &&
-		line[2] >= '0' && line[2] <= '9'
-}
-
-func parseLrcLine(line string) lyrics.Line {
-	// [00:00.00]text or [00:00.000] text
-	h, _ := strconv.Atoi(line[1:3])
-	m, _ := strconv.Atoi(line[4:6])
-
-	closeBracket := strings.IndexByte(line, ']')
-
-	msStr := line[7:closeBracket]
-	ms, _ := strconv.Atoi(msStr)
-	if len(msStr) == 2 {
-		ms *= 10
-	} else if len(msStr) == 1 {
-		ms *= 100
-	}
-
-	words := strings.TrimSpace(line[closeBracket+1:])
-
-	return lyrics.Line{
-		Time:  h*60*1000 + m*1000 + ms,
-		Words: words,
-	}
 }

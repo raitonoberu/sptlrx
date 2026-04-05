@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
@@ -24,13 +23,9 @@ type Client struct {
 
 // Client implements lyrics.Provider
 func (c *Client) Lyrics(artist, track string) ([]lyrics.Line, error) {
-	// try /api/get first (exact match, no caching issues)
-	lines, err := c.get(artist, track)
-	if err == nil && lines != nil {
-		return lines, nil
+	if artist != "" && track != "" {
+		return c.get(artist, track)
 	}
-
-	// fallback to /api/search
 	return c.search(artist + " " + track)
 }
 
@@ -117,10 +112,10 @@ func parseSynced(r lrclibTrack) []lyrics.Line {
 	lines := strings.Split(r.SyncedLyrics, "\n")
 	result := make([]lyrics.Line, 0, len(lines))
 	for _, line := range lines {
-		if !isTimestampLine(line) {
+		if !lyrics.IsTimestampLine(line) {
 			continue
 		}
-		result = append(result, parseLrcLine(line))
+		result = append(result, lyrics.ParseLrcLine(line))
 	}
 	return result
 }
@@ -132,39 +127,4 @@ func parsePlain(r lrclibTrack) []lyrics.Line {
 		result[i] = lyrics.Line{Words: line}
 	}
 	return result
-}
-
-// isTimestampLine checks if a line starts with a timestamp like [00:17.12]
-func isTimestampLine(line string) bool {
-	if len(line) < 10 {
-		return false
-	}
-	return line[0] == '[' &&
-		line[3] == ':' &&
-		line[6] == '.' &&
-		line[1] >= '0' && line[1] <= '9' &&
-		line[2] >= '0' && line[2] <= '9'
-}
-
-func parseLrcLine(line string) lyrics.Line {
-	// "[00:17.12] text" or "[00:17.123]text"
-	m, _ := strconv.Atoi(line[1:3])
-	s, _ := strconv.Atoi(line[4:6])
-
-	closeBracket := strings.IndexByte(line, ']')
-
-	msStr := line[7:closeBracket]
-	ms, _ := strconv.Atoi(msStr)
-	if len(msStr) == 2 {
-		ms *= 10
-	} else if len(msStr) == 1 {
-		ms *= 100
-	}
-
-	words := strings.TrimSpace(line[closeBracket+1:])
-
-	return lyrics.Line{
-		Time:  m*60*1000 + s*1000 + ms,
-		Words: words,
-	}
 }

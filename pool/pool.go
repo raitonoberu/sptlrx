@@ -99,11 +99,7 @@ func listenPlayer(player player.Player, ch chan playerState, interval int) {
 
 		st := playerState{Err: err}
 		if state != nil {
-			st.ID = state.ID
-			st.Artist = state.Artist
-			st.Track = state.Track
-			st.Playing = state.Playing
-			st.Position = state.Position
+			st.State = *state
 		}
 		ch <- st
 
