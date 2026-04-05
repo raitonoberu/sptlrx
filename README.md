@@ -27,6 +27,12 @@
 yay -S sptlrx-bin
 ```
 
+- Debian / Ubuntu
+
+```sh
+sudo apt install sptlrx
+```
+
 - NixOS ([@MoritzBoehme](https://github.com/MoritzBoehme))
 
 ```sh
