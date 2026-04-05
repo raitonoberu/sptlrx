@@ -27,7 +27,7 @@
 yay -S sptlrx-bin
 ```
 
-- Debian / Ubuntu
+- Debian / Ubuntu ([@mdosch](https://github.com/mdosch))
 
 ```sh
 sudo apt install sptlrx
