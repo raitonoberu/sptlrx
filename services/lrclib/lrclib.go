@@ -26,7 +26,8 @@ func (c *Client) Lyrics(artist, track string) ([]lyrics.Line, error) {
 	if artist != "" && track != "" {
 		return c.get(artist, track)
 	}
-	return c.search(artist + " " + track)
+
+	return c.search(artist + track)
 }
 
 func (c *Client) get(artist, track string) ([]lyrics.Line, error) {
