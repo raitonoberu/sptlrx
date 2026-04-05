@@ -1,5 +1,8 @@
 .nh
 .TH sptlrx 5
+.SH NAME
+\fBsptlrx\fP \- Synchronized lyrics in your terminal
+
 .SH LOCATION
 The config file will be created at the first launch. It is located in \fB~/.config/sptlrx/config.yaml\fR\&. Run sptlrx -h to see the full path.
 
@@ -16,12 +19,14 @@ If you want to use Spotify as your player, you will need to log in first.
 Go to developer.spotify.com
 \[la]https://developer.spotify.com/dashboard\[ra], create a new app, and set the redirect URI to \fBhttp://127.0.0.1:8888/callback\fR\&. Grab your Client ID and Client Secret.
 .IP "  2." 5
-Run \fBsptlrx login\fR\&. You must pass Client ID and Client Secret in one of two ways:
+Run \fBsptlrx login\fR\&. You can pass Client ID and Client Secret in one of three ways:
 .RS
 .IP \(bu 2
 As environmental variables: \fBSPOTIFY_CLIENT_ID\fR and \fBSPOTIFY_CLIENT_SECRET\fR
 .IP \(bu 2
 As CLI parameters: \fB--client-id\fR and \fB--client-secret\fR
+.IP \(bu 2
+Interactively: run \fBsptlrx login\fR without providing credentials and you will be prompted to enter them
 .RE
 .IP "  3." 5
 Spotify login page will open. Log in and wait for the success message.
