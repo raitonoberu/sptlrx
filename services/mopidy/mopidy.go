@@ -71,11 +71,10 @@ func (c *Client) State() (*player.State, error) {
 		artist += a.Name
 	}
 
-	query := artist + " " + current.Result.Name
-
 	return &player.State{
 		ID:       current.Result.URI,
-		Query:    query,
+		Artist:   artist,
+		Track:    current.Result.Name,
 		Position: position.Result,
 		Playing:  state.Result == "playing",
 	}, err

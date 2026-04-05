@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/raitonoberu/sptlrx/player"
@@ -64,15 +65,18 @@ func (c *Client) State() (*player.State, error) {
 		return nil, err
 	}
 
-	query := ""
-	for _, a := range state.Item.Artists {
-		query += a.Name + " "
+	var b strings.Builder
+	for i, a := range state.Item.Artists {
+		if i != 0 {
+			b.WriteByte(' ')
+		}
+		b.WriteString(a.Name)
 	}
-	query += state.Item.Name
 
 	return &player.State{
 		ID:       state.Item.ID,
-		Query:    query,
+		Artist:   b.String(),
+		Track:    state.Item.Name,
 		Position: state.ProgressMs,
 		Playing:  state.IsPlaying,
 	}, nil

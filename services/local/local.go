@@ -3,13 +3,13 @@ package local
 import (
 	"bufio"
 	"fmt"
-	"github.com/raitonoberu/sptlrx/lyrics"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
+
+	"github.com/raitonoberu/sptlrx/lyrics"
 )
 
 var replacer = strings.NewReplacer(
@@ -38,7 +38,8 @@ type Client struct {
 	index []*file
 }
 
-func (c *Client) Lyrics(id, query string) ([]lyrics.Line, error) {
+func (c *Client) Lyrics(artist, track string) ([]lyrics.Line, error) {
+	query := artist + " " + track
 	f := c.findFile(query)
 	if f == nil {
 		return nil, nil
@@ -115,22 +116,10 @@ func parseLrcFile(reader io.Reader) []lyrics.Line {
 	scanner := bufio.NewScanner(reader)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if !strings.HasPrefix(line, "[") || len(line) < 10 {
+		if !lyrics.IsTimestampLine(line) {
 			continue
 		}
-		result = append(result, parseLrcLine(line))
+		result = append(result, lyrics.ParseLrcLine(line))
 	}
 	return result
-}
-
-func parseLrcLine(line string) lyrics.Line {
-	// [00:00.00]text -> {"time": 0, "words": "text"}
-	h, _ := strconv.Atoi(line[1:3])
-	m, _ := strconv.Atoi(line[4:6])
-	s, _ := strconv.Atoi(line[7:9])
-
-	return lyrics.Line{
-		Time:  h*60*1000 + m*1000 + s*10,
-		Words: line[10:],
-	}
 }
