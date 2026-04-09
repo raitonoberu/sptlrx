@@ -173,19 +173,68 @@ func validateColor(color string) bool {
 	return false
 }
 
-// GetPlayer returns a player based on config values
+// GetPlayer returns a player based on config values.
+// It supports a comma-separated list in conf.Player for backward-compatible multi-player configuration.
+// Example: "mopidy ,mpris" will try Mopidy first, then MPRIS if Mopidy init fails.
+// Only players explicitly listed by the user will be tried.
 func GetPlayer(conf *Config) (player.Player, error) {
-	switch conf.Player {
-	case "spotify":
-		return spotify.New()
-	case "mpd":
-		return mpd.New(conf.Mpd.Address, conf.Mpd.Password), nil
-	case "mopidy":
-		return mopidy.New(conf.Mopidy.Address), nil
-	case "mpris":
-		return mpris.New(conf.Mpris.Players)
-	case "browser":
-		return browser.New(conf.Browser.Port)
+	// Split by comma to support multi-player configuration while keeping single value compatible
+	raw := strings.Split(conf.Player, ",")
+	// If no comma present, raw will contain the original single value
+
+	var errs []string
+	for _, name := range raw {
+		n := strings.TrimSpace(name)
+		if n == "" {
+			continue
+		}
+
+		switch n {
+		case "spotify":
+			p, err := spotify.New()
+			if err != nil {
+				errs = append(errs, fmt.Sprintf("spotify: %v", err))
+				continue
+			}
+			return p, nil
+		case "mpd":
+			p, err := mpd.New(conf.Mpd.Address, conf.Mpd.Password)
+			if err != nil {
+				errs = append(errs, fmt.Sprintf("mpd: %v", err))
+				continue
+			}
+			return p, nil
+		case "mopidy":
+			p, err := mopidy.New(conf.Mopidy.Address)
+			if err != nil {
+				errs = append(errs, fmt.Sprintf("mopidy: %v", err))
+				continue
+			}
+			return p, nil
+		case "mpris":
+			p, err := mpris.New(conf.Mpris.Players)
+			if err != nil {
+				errs = append(errs, fmt.Sprintf("mpris: %v", err))
+				continue
+			}
+			return p, nil
+		case "browser":
+			p, err := browser.New(conf.Browser.Port)
+			if err != nil {
+				errs = append(errs, fmt.Sprintf("browser: %v", err))
+				continue
+			}
+			return p, nil
+		default:
+			// Unknown player name; record and continue to allow next specified players
+			errs = append(errs, fmt.Sprintf("unknown player: %q", n))
+			continue
+		}
 	}
-	return nil, fmt.Errorf("unknown player: \"%s\"", conf.Player)
+
+	// If nothing succeeded, return aggregated error for easier troubleshooting
+	if len(errs) == 0 {
+		return nil, fmt.Errorf("no player specified")
+	}
+	return nil, fmt.Errorf("no player initialized successfully; tried: %s", strings.Join(errs, "; "))
 }

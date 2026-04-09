@@ -8,11 +8,16 @@ import (
 	"github.com/fhs/gompd/mpd"
 )
 
-func New(address, password string) *Client {
-	return &Client{
+func New(address, password string) (*Client, error) {
+	c := &Client{
 		address:  address,
 		password: password,
 	}
+	// Attempt initial connection so callers can decide to skip on error
+	if err := c.connect(); err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 // Client implements player.Player

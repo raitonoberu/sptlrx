@@ -54,7 +54,10 @@ Config file will be created at the first launch. On Linux it's located in `~/.co
 
 ```yaml
 ### Global settings ###
-# Player that will be used. Possible values: spotify, mpd, mopidy, mpris.
+# Player that will be used. Possible values: spotify, mpd, mopidy, mpris, browser.
+# You can also provide a comma-separated list to try players in order, e.g.:
+#   player: mopidy ,mpris
+# Only the players explicitly listed will be tried, in the given order.
 player: spotify
 # Whether to ignore errors instead of showing them.
 ignoreErrors: true
@@ -189,6 +192,19 @@ mpris:
 ```
 
 Linux only. System player that supports MPRIS protocol will be used. You can also specify a whitelist of players to use, example: `players: [rhythmbox, spotifyd, ncspot]`. Run `playerctl -l` to get the names.
+
+### Multiple Players (fallback by order)
+
+```yaml
+# config.yaml
+player: mopidy ,mpris
+mopidy:
+  address: 127.0.0.1:6680
+mpris:
+  players: []
+```
+
+The application will initialize players in the order specified by `player` and use the first one that initializes successfully. Players not listed will not be tried.
 
 ### Browser
 

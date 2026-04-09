@@ -8,8 +8,15 @@ import (
 	"net/http"
 )
 
-func New(address string) *Client {
-	return &Client{address: address}
+func New(address string) (*Client, error) {
+	// Return a client without probing; but perform a lightweight health check to catch obvious misconfig
+	c := &Client{address: address}
+	// Try a simple RPC that should always be available; ignore body decoding errors, we just need connectivity
+	var out stateResponse
+	if err := c.get("core.playback.get_state", &out); err != nil {
+		return nil, err
+	}
+	return c, nil
 }
 
 // Client implements player.Player
