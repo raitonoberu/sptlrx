@@ -41,6 +41,15 @@ nix-env -iA nixos.sptlrx
 nix-env -iA nixpkgs.sptlrx
 ```
 
+- Fedora ([@yuliusw](https://github.com/yuliusw))
+
+```sh
+sudo dnf copr enable yuliusw/sptlrx
+sudo dnf install sptlrx
+#some Fedora release do not support latest version of GO . if you want latest ,use 
+# @go-sig/golang-rawhide-dwarf5 copr to build
+```
+
 **Windows**, **MacOS** & **Other**
 
 Download the binary from the [Releases](https://github.com/raitonoberu/sptlrx/releases/latest) page or [build it yourself](./building.md).
