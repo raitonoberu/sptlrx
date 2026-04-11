@@ -113,13 +113,16 @@ func (m *Model) View() string {
 		)
 	}
 	if len(m.state.Lines) == 0 {
-		return gloss.PlaceVertical(
-			m.h, gloss.Center,
-			m.styleCurrent.
-				Align(gloss.Center).
-				Width(m.w).
-				Render(lyrics.NoLyricsPlaceholder),
-		)
+		if m.Config.ShowLyricsNotFound {
+			return gloss.PlaceVertical(
+				m.h, gloss.Center,
+				m.styleCurrent.
+					Align(gloss.Center).
+					Width(m.w).
+					Render(lyrics.NoLyricsPlaceholder),
+			)
+		}
+		return ""
 	}
 
 	curLine := m.styleCurrent.

@@ -34,10 +34,11 @@ func init() {
 }
 
 type Config struct {
-	Player         string `default:"spotify" yaml:"player"`
-	IgnoreErrors   bool   `default:"true" yaml:"ignoreErrors"`
-	TimerInterval  int    `default:"200" yaml:"timerInterval"`
-	UpdateInterval int    `default:"2000" yaml:"updateInterval"`
+	Player             string `default:"spotify" yaml:"player"`
+	IgnoreErrors       bool   `default:"true" yaml:"ignoreErrors"`
+	ShowLyricsNotFound bool   `default:"true" yaml:"showLyricsNotFound"`
+	TimerInterval      int    `default:"200" yaml:"timerInterval"`
+	UpdateInterval     int    `default:"2000" yaml:"updateInterval"`
 
 	Style struct {
 		HAlignment string `default:"center" yaml:"hAlignment"`
