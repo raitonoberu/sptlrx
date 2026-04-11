@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+const NoLyricsPlaceholder = "Hmm. We don't know the lyrics for this one."
+
 type Provider interface {
 	Lyrics(artist, track string) ([]Line, error)
 }
