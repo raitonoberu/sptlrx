@@ -24,7 +24,10 @@ type Client struct {
 // Client implements lyrics.Provider
 func (c *Client) Lyrics(artist, track string) ([]lyrics.Line, error) {
 	if artist != "" && track != "" {
-		return c.get(artist, track)
+		lines, err := c.get(artist, track)
+		if lines != nil || err != nil {
+			return lines, err
+		}
 	}
 
 	return c.search(artist + track)
@@ -60,7 +63,11 @@ func (c *Client) get(artist, track string) ([]lyrics.Line, error) {
 		return nil, err
 	}
 
-	return parseTrack(response), nil
+	if response.SyncedLyrics != "" {
+		return parseSynced(response), nil
+	}
+
+	return nil, nil
 }
 
 func (c *Client) search(query string) ([]lyrics.Line, error) {
@@ -91,6 +98,13 @@ func (c *Client) search(query string) ([]lyrics.Line, error) {
 	if len(response) == 0 {
 		return nil, nil
 	}
+
+	for _, track := range response {
+		if track.SyncedLyrics != "" {
+			return parseSynced(track), nil
+		}
+	}
+
 	return parseTrack(response[0]), nil
 }
 
