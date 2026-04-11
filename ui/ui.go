@@ -79,7 +79,7 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "up":
-			if m.state.Playing && lyrics.Timesynced(m.state.Lines) {
+			if len(m.state.Lines) == 0 || (m.state.Playing && lyrics.Timesynced(m.state.Lines)) {
 				break
 			}
 			m.state.Index -= 1
@@ -87,7 +87,7 @@ func (m *Model) Update(message tea.Msg) (tea.Model, tea.Cmd) {
 				m.state.Index = 0
 			}
 		case "down":
-			if m.state.Playing && lyrics.Timesynced(m.state.Lines) {
+			if len(m.state.Lines) == 0 || (m.state.Playing && lyrics.Timesynced(m.state.Lines)) {
 				break
 			}
 			m.state.Index += 1
@@ -113,7 +113,13 @@ func (m *Model) View() string {
 		)
 	}
 	if len(m.state.Lines) == 0 {
-		return ""
+		return gloss.PlaceVertical(
+			m.h, gloss.Center,
+			m.styleCurrent.
+				Align(gloss.Center).
+				Width(m.w).
+				Render(lyrics.NoLyricsPlaceholder),
+		)
 	}
 
 	curLine := m.styleCurrent.
